@@ -28,4 +28,5 @@ def generate_questionnaire(job_role: str):
     return {"questions": selected_questions}
 
 # To run the API, use: uvicorn questionnaire_model:app --reload
-# Call the API using a browser: http://127.0.0.1:8000/generate_questionnaire/?job_role=frontend developer&num_questions=5&difficulty=Medium
+# Call the API using a browser: http://127.0.0.1:8000/generate_questionnaire/?job_role=frontend developer
+# In the above link for job_role write the job role for which you need to get the questions
