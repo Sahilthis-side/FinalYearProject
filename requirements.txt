@@ -2,3 +2,6 @@ pandas
 fastapi 
 uvicorn
 openpyxl
+sentence_transformers
+requests
+torch
