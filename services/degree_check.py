@@ -83,23 +83,23 @@ def degree_similarity(candidate_degree, job_requirement):
     """Computes similarity score between candidate and job degree."""
     candidate_score = get_degree_score(candidate_degree)
     job_score = get_degree_score(job_requirement)
-    
+
     if job_score == 0:  # Avoid division by zero
         return 0
-    
-    # Base ratio
-    base_score = (candidate_score / job_score) * 100
 
-    # Apply penalty if candidate has a lower degree
+    degree_gap = abs(candidate_score - job_score)
+
+    # Candidate has a lower degree → Apply a penalty
     if candidate_score < job_score:
-        return min(60, base_score)
+        penalty = max(40, 100 - (degree_gap * 10))  # Min 40
+        return round(penalty, 2)
 
-    # Apply bonus if candidate has a higher degree
+    # Candidate has a higher degree → Apply a bonus
     if candidate_score > job_score:
-        bonus = (candidate_score - job_score) * 10  # 10% per level
-        return max(120, base_score + bonus)
+        bonus = min(140, 100 + (degree_gap * 10))  # Max 140
+        return round(bonus, 2)
 
-    return round(base_score, 2)
+    return 100  # Exact match
 
 @app.get("/degree_similarity/")
 def degree_similarity_api(candidate_degree: str, job_requirement: str):
