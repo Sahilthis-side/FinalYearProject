@@ -61,6 +61,89 @@ class ESCOSkillsMatchingSystem:
             "mobile development": [
                 "android", "ios", "swift", "kotlin", "react native", "flutter", "xamarin",
                 "mobile ui", "responsive design", "app development", "mobile app", "hybrid app"
+            ],
+            "cloud computing": [
+                "aws", "amazon web services", "azure", "google cloud platform", "gcp",
+                "lambda", "ec2", "s3", "kubernetes", "serverless", "cloud formation",
+                "terraform", "cloud storage", "cloud security", "multi-cloud",
+                "load balancing", "auto-scaling", "cloud migration", "cloudwatch"
+            ],
+            "cybersecurity": [
+                "network security", "ethical hacking", "penetration testing", "siem",
+                "soc", "firewalls", "vpn", "encryption", "ssl/tls", "owasp",
+                "vulnerability assessment", "incident response", "iso 27001", "pci dss",
+                "zero trust", "iam", "saml", "oauth", "jwt", "waf"
+            ],
+            "testing/qa": [
+                "unit testing", "integration testing", "test automation", "selenium",
+                "cypress", "jest", "junit", "pytest", "load testing", "jmeter",
+                "postman", "soapui", "tdd", "bdd", "testrail", "qa processes",
+                "regression testing", "ci/cd pipelines", "performance testing"
+            ],
+            "frontend development": [
+                "react", "angular", "vue", "svelte", "redux", "mobx",
+                "web components", "accessibility", "wcag", "responsive design",
+                "cross-browser compatibility", "web performance", "lighthouse",
+                "graphql", "apollo", "webassembly", "progressive enhancement"
+            ],
+            "database": [
+                "sql", "nosql", "mysql", "postgresql", "mongodb", "redis",
+                "cassandra", "dynamodb", "database design", "orm", "prisma",
+                "sqlalchemy", "indexing", "query optimization", "acid",
+                "transactions", "replication", "sharding", "data modeling"
+            ],
+            "networking": [
+                "tcp/ip", "dns", "http/https", "rest", "grpc", "websockets",
+                "cdn", "vpc", "subnets", "routing", "load balancers", "api gateway",
+                "network security", "ssh", "ssl termination", "packet analysis",
+                "wireshark", "osi model", "latency optimization"
+            ],
+            "ui/ux design": [
+                "figma", "sketch", "adobe xd", "user research", "wireframing",
+                "prototyping", "design systems", "material design", "usability testing",
+                "interaction design", "user flows", "information architecture",
+                "responsive design", "mobile-first design", "a/b testing", "heuristic evaluation"
+            ],
+            "blockchain/web3": [
+                "solidity", "smart contracts", "ethereum", "hyperledger", "nft",
+                "defi", "web3.js", "ether.js", "truffle", "hardhat", "ipfs",
+                "consensus algorithms", "tokenomics", "dapp development", "daos",
+                "cryptography", "zero-knowledge proofs", "layer 2 solutions"
+            ],
+            "devops/sre": [
+                "observability", "prometheus", "grafana", "elk stack", "splunk",
+                "chaos engineering", "disaster recovery", "incident management",
+                "service level objectives", "error budgets", "capacity planning",
+                "cost optimization", "gitops", "argo cd", "spinnaker", "immutable infrastructure"
+            ],
+            "machine learning ops": [
+                "mlflow", "kubeflow", "model deployment", "model monitoring",
+                "feature stores", "data versioning", "a/b testing models",
+                "model quantization", "onnx", "tf serving", "vertex ai",
+                "sagemaker", "distributed training", "hyperparameter tuning"
+            ],
+            "embedded systems": [
+                "iot", "arduino", "raspberry pi", "rtos", "firmware",
+                "device drivers", "sensors", "bluetooth low energy", "zigbee",
+                "memory management", "power optimization", "embedded linux",
+                "real-time systems", "can bus", "modbus", "industrial protocols"
+            ],
+            "soft skills": [
+                "communication", "teamwork", "problem-solving", "critical thinking",
+                "time management", "agile methodology", "scrum", "kanban",
+                "mentoring", "technical writing", "stakeholder management",
+                "conflict resolution", "presentation skills", "remote collaboration"
+            ],
+            "game development": [
+                "unity", "unreal engine", "c#", "3d modeling", "physics engines",
+                "shaders", "vr development", "ar development", "game ai",
+                "multiplayer networking", "particle systems", "animation systems",
+                "game optimization", "procedural generation", "game design patterns"
+            ],
+            "quantum computing": [
+                "qiskit", "quantum algorithms", "quantum circuits", "qubit",
+                "superposition", "entanglement", "quantum error correction",
+                "quantum cryptography", "quantum machine learning", "shor's algorithm"
             ]
         }
         
@@ -510,6 +593,5 @@ if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
 
-# uvicorn skills_check:app --reload
+# uvicorn esco-skills-matching:app --reload
 # http://localhost:8000/match-percentage?job_skills=python,javascript,react,restful%20apis&candidate_skills=nodejs,react
-# limitation enter full form
