@@ -34,3 +34,4 @@ def compare(job_major: str, candidate_major: str):
 
 # uvicorn major_check:app --reload
 # http://127.0.0.1:8000/compare?job_major=Computer%20Science&candidate_major=Software%20Engineering
+# limitation majors should be entered in full form not like cs , ai it should be computer science , artificial intelligence or software engineering 
