@@ -11,7 +11,7 @@ model = SentenceTransformer("all-mpnet-base-v2")
 # Predefined degree rankings (local hierarchy)
 degree_rank = {
     "PhD": 6,
-    "MTech": 5, "MS": 5, "MSc": 5, "MCA": 3.5,
+    "MTech": 5, "ME": 5, "MSc": 4, "MCA": 3.2,
     "BTech": 3, "BE": 3, "BSc": 2, "BCA": 1, "Diploma": 0.5
 }
 
@@ -106,3 +106,6 @@ def degree_similarity_api(candidate_degree: str, job_requirement: str):
     """API endpoint to compare degrees."""
     similarity_score = degree_similarity(candidate_degree, job_requirement)
     return {"Degree Similarity Score": similarity_score}
+
+# To run the API, use: uvicorn degree_check:app --reload
+# Call API in browser: http://127.0.0.1:8000/degree_similarity/?candidate_degree=BCA&job_requirement=Btech
