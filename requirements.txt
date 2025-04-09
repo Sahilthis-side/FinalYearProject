@@ -5,3 +5,5 @@ openpyxl
 sentence_transformers
 requests
 torch
+spacy
+fuzzywuzzy
