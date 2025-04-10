@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="description"
+    content="Streamline your recruitment process with our AI-powered platform. Smart resume evaluation, personalized assessments, and unbiased scoring for both candidates and recruiters.">
+  <meta name="theme-color" content="#ffffff">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="robots" content="index, follow">
+
+  <!-- Preconnect -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@100..800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400..700;1,400..700&display=swap"
+    rel="stylesheet">
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- Core CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="styles.css" />
+
+  <title>AI-Powered Recruitment Platform | Smart Hiring for Candidates & Recruiters</title>
+
+  <!-- SEO Meta Tags -->
+  <meta name="description"
+    content="Streamline your recruitment process with our AI-powered platform. Smart resume evaluation, personalized assessments, and unbiased scoring for both candidates and recruiters.">
+  <meta name="keywords" content="AI recruitment, hiring platform, job search, recruitment software">
+  <meta property="og:title" content="AI-Powered Recruitment Platform">
+  <meta property="og:description" content="Smart hiring platform for candidates and recruiters">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:site_name" content="AI Recruitment Platform">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="AI-Powered Recruitment Platform">
+  <meta name="twitter:description" content="Smart hiring platform for candidates and recruiters">
+
+  <!-- Font Links -->
+  <link rel="icon" type="image/x-icon" href="">
+</head>
+
+<body class="antialiased text-gray-800 min-h-screen flex flex-col">
+  <!-- Skip to main content link for accessibility -->
+  <a href="#main-content"
+    class="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 focus:z-50 focus:p-4 focus:bg-white focus:text-black">
+    Skip to main content
+  </a>
+
+
+
+  <!-- Main content area -->
+  <main id="main-content" class="flex-1 relative h-full">
+    <div id="RolloutPageContent">
+      <!-- Navigation Bar -->
+      <element id="6ff90058-584e-402f-b92c-91fa7f7031aa" data-section-id="6ff90058-584e-402f-b92c-91fa7f7031aa">
+        <div id="root">
+          <header id="header" class="bg-neutral-900 text-white">
+            <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
+              <div class="flex items-center">
+                <a href="#" class="text-2xl font-bold text-cyan-400">RecruitAI</a>
+              </div>
+
+              <!-- Login/Signup buttons (desktop) -->
+              <div class="hidden md:flex items-center space-x-4">
+                <a href="#" class="px-3 py-1  hover:text-cyan-400 transition-colors duration-300">Home</a>
+                <a href="#"
+                  class="px-4 py-1 border border-blue-500 rounded-md hover:bg-cyan-500 hover:text-white transition-colors duration-300">Login</a>
+                <a href="#"
+                  class="px-4 py-1 bg-gradient-to-r from-blue-500 to-purple-600 rounded-md hover:opacity-90 transition-opacity duration-300">Sign
+                  Up</a>
+              </div>
+
+              <!-- Mobile menu button -->
+              <button id="mobile-menu-button" class="md:hidden flex items-center" aria-label="Toggle menu"
+                aria-expanded="false" aria-controls="mobile-menu">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  class="w-6 h-6">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16">
+                  </path>
+                </svg>
+              </button>
+
+              <!-- Mobile navigation (hidden by default) -->
+              <div id="mobile-menu"
+                class="fixed inset-0 bg-neutral-900 bg-opacity-95 z-50 hidden flex-col justify-center items-center">
+                <button id="close-menu-button" class="absolute top-4 right-4" aria-label="Close menu">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                    class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                  </svg>
+                </button>
+                <ul class="flex flex-col space-y-6 text-center">
+                  <li class="pt-6">
+                    <a href="#" class="text-xl hover:text-cyan-400 transition-colors duration-300">Home</a>
+                  </li>
+                  </li>
+                  <li>
+                    <a href="#" class="text-xl hover:text-cyan-400 transition-colors duration-300">Login</a>
+                  </li>
+                  <li>
+                    <a href="#" class="text-xl hover:text-cyan-400 transition-colors duration-300">Sign Up</a>
+                  </li>
+                </ul>
+              </div>
+            </nav>
+          </header>
+        </div>
+      </element>
+      <element id="088ae9f9-fcd9-4355-9e3d-df343216e430" data-section-id="088ae9f9-fcd9-4355-9e3d-df343216e430">
+        <div id="root" class="bg-slate-900 min-h-screen font-sans text-white">
+          <div class="flex flex-col lg:flex-row min-h-screen" id="el-i6k53df4">
+
+
+            <!-- Main Content Area -->
+            <main class="flex-1 overflow-y-auto" id="el-0r0vq3cl">
+
+
+              <div id="18a76453-c95f-4475-a1ef-1982fcebb2aa" data-section_id="18a76453-c95f-4475-a1ef-1982fcebb2aa"
+                data-type="content" data-order="2" class="page_sectionHighlight__ahPeD sectionCode"
+                data-section-id="18a76453-c95f-4475-a1ef-1982fcebb2aa">
+
+                <section id="roleSelection"
+                  class="min-h-screen flex items-center justify-center relative bg-slate-900 overflow-hidden">
+                  <!-- Background Animation -->
+                  <div class="absolute inset-0 overflow-hidden" id="el-uyx1s44i">
+                    <div class="absolute inset-0 bg-gradient-to-br from-indigo-900/30 via-slate-900 to-purple-900/30"
+                      id="el-hb7mnkln"></div>
+
+                    <!-- Animated Network/Mesh Background -->
+                    <div class="absolute inset-0 z-0 overflow-hidden">
+                      <div id="particles-js" class="absolute inset-0"></div>
+                      <div
+                        class="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-purple-900/20 to-black-900/20">
+                      </div>
+                      <!-- Glowing circles -->
+                      <div
+                        class="absolute top-20 left-10 w-64 h-64 bg-blue-500 rounded-full opacity-10 blur-3xl animate-pulse">
+                      </div>
+                      <div
+                        class="absolute bottom-20 right-10 w-80 h-80 bg-cyan-400 rounded-full opacity-10 blur-3xl animate-pulse"
+                        style="animation-delay: 1s;"></div>
+                      <div
+                        class="absolute top-1/2 left-1/3 w-40 h-40 bg-indigo-500 rounded-full opacity-10 blur-3xl animate-pulse"
+                        style="animation-delay: 2s;"></div>
+                      <div class="absolute top-1/4 left-1/4 w-64 h-64 rounded-full bg-blue-500/10 blur-3xl"></div>
+                      <div class="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-purple-500/10 blur-3xl"></div>
+                    </div>
+
+                  </div>
+
+                  <!-- Main Content Container -->
+                  <div class="container mx-auto px-4 relative z-10" id="el-jypauruq">
+                    <!-- Logo and Header -->
+                    <div class="text-center mb-8" id="el-6md0e3rx">
+                      <div
+                        class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-600/20 mt-4 mb-4"
+                        id="el-wayrlg51">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-indigo-500" fill="none"
+                          viewBox="0 0 24 24" stroke="currentColor" id="el-z4td99jn">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                            id="el-nkzs58bt"></path>
+                        </svg>
+                      </div>
+                      <h1 class="text-3xl font-bold text-white mb-1" id="el-msl92scb">RecruitAI</h1>
+                      <p class="text-indigo-300" id="el-sset3xaf">Choose your role to get started</p>
+                    </div>
+
+                    <!-- Role Selection Cards Container -->
+                    <div class="max-w-6xl mx-auto" id="el-fctv37y8">
+                      <div class="flex flex-col md:flex-row md:space-x-6 space-y-6 md:space-y-0" id="el-zcx4qgde">
+
+                        <!-- Candidate Card -->
+                        <div class="flex-1 group" id="el-23cj9a5n">
+                          <div
+                            class="h-full bg-slate-800/70 backdrop-blur-xl border border-slate-700/50 rounded-xl shadow-xl overflow-hidden transform transition duration-500 hover:shadow-indigo-500/20 hover:border-indigo-500/30 hover:-translate-y-1"
+                            id="el-3uvr707o">
+                            <!-- Card Image Header -->
+                            <div class="relative h-64 overflow-hidden" id="el-3mi8koze">
+                              <div
+                                class="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent opacity-70 z-10"
+                                id="el-r17wj8x8"></div>
+                              <img
+                                src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?crop=entropy&amp;cs=tinysrgb&amp;fit=max&amp;fm=jpg&amp;ixid=M3w2MzQ2fDB8MXxzZWFyY2h8MXx8cm9sZXNlbGVjdGlvbiUyMHByb2Zlc3Npb25hbHxlbnwwfDB8fHwxNzQ0MTczMDY4fDA&amp;ixlib=rb-4.0.3&amp;q=80&amp;w=1080?q=80"
+                                alt="Professional candidate in business attire"
+                                onerror="this.onerror=null; this.src='https://placehold.co/600x400?text=Candidate'"
+                                class="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                                id="el-a2zk42n4">
+                              <div class="absolute bottom-0 left-0 p-6 z-20" id="el-2c34fhaw">
+                                <div
+                                  class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-indigo-600/60 backdrop-blur-sm mb-4"
+                                  id="el-uq556vdq">
+                                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor" id="el-dar3q0jm">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                      id="el-wwx64bca"></path>
+                                  </svg>
+                                </div>
+                                <h2 class="text-2xl font-bold text-white" id="el-u0z1yrrk">For Candidates</h2>
+                              </div>
+                            </div>
+                            <!-- Card Content -->
+                            <div class="p-6 space-y-6" id="el-bnfi33h3">
+                              <p class="text-slate-300" id="el-wp3qwoti">Get AI-evaluated feedback, personalized
+                                assessments, and real-time updates to improve your hiring journey.</p>
+
+                              <div class="space-y-3" id="el-8wvzr81i">
+                                <div class="flex items-start" id="el-eb3zovzt">
+                                  <div class="flex-shrink-0 h-5 w-5 text-indigo-400 mt-1" id="el-23tb32uy">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                                      id="el-kfyoz353">
+                                      <path fill-rule="evenodd"
+                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                        clip-rule="evenodd" id="el-hv0b2usz"></path>
+                                    </svg>
+                                  </div>
+                                  <span class="ml-2 text-slate-300" id="el-0azhucp1">AI-powered resume analysis</span>
+                                </div>
+                                <div class="flex items-start" id="el-ur5ehes3">
+                                  <div class="flex-shrink-0 h-5 w-5 text-indigo-400 mt-1" id="el-i6n6zd2s">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                                      id="el-26oyw7gj">
+                                      <path fill-rule="evenodd"
+                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                        clip-rule="evenodd" id="el-wsya41jh"></path>
+                                    </svg>
+                                  </div>
+                                  <span class="ml-2 text-slate-300" id="el-wvag26xq">Personalized job
+                                    recommendations</span>
+                                </div>
+                                <div class="flex items-start" id="el-vdn0ef58">
+                                  <div class="flex-shrink-0 h-5 w-5 text-indigo-400 mt-1" id="el-shbmqo4m">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                                      id="el-nobceghj">
+                                      <path fill-rule="evenodd"
+                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                        clip-rule="evenodd" id="el-ex69t5d4"></path>
+                                    </svg>
+                                  </div>
+                                  <span class="ml-2 text-slate-300" id="el-l4udeuk8">Real-time application
+                                    tracking</span>
+                                </div>
+                              </div>
+
+                              <button type="button" id="candidateSignupBtn" onclick="showCandidateSignup()"
+                                class="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-600 text-white font-medium rounded-lg shadow-lg hover:shadow-indigo-500/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:ring-offset-slate-800 transform transition duration-300 hover:scale-[1.02] active:scale-[0.98] group">
+                                <span class="flex items-center justify-center" id="el-w7hkocv6">
+                                  <span id="el-qapm6wd0">Sign Up as Candidate</span>
+                                  <svg xmlns="http://www.w3.org/2000/svg"
+                                    class="h-5 w-5 ml-2 transition-transform duration-300 group-hover:translate-x-1"
+                                    fill="none" viewBox="0 0 24 24" stroke="currentColor" id="el-enhsp1u1">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M14 5l7 7m0 0l-7 7m7-7H3" id="el-qxw2svm4"></path>
+                                  </svg>
+                                </span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Recruiter Card -->
+                        <div class="flex-1 group" id="el-29uia3i1">
+                          <div
+                            class="h-full bg-slate-800/70 backdrop-blur-xl border border-slate-700/50 rounded-xl shadow-xl overflow-hidden transform transition duration-500 hover:shadow-purple-500/20 hover:border-purple-500/30 hover:-translate-y-1"
+                            id="el-8vyn9niw">
+                            <!-- Card Image Header -->
+                            <div class="relative h-64 overflow-hidden" id="el-c4ymm47o">
+                              <div
+                                class="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent opacity-70 z-10"
+                                id="el-9pvcnfmx"></div>
+                              <img
+                                src="https://images.unsplash.com/photo-1425421669292-0c3da3b8f529?crop=entropy&amp;cs=tinysrgb&amp;fit=max&amp;fm=jpg&amp;ixid=M3w2MzQ2fDB8MXxzZWFyY2h8M3x8cm9sZXNlbGVjdGlvbiUyMHByb2Zlc3Npb25hbHxlbnwwfDB8fHwxNzQ0MTczMDY4fDA&amp;ixlib=rb-4.0.3&amp;q=80&amp;w=1080?q=80"
+                                alt="A man in a black suit loosening his tie"
+                                onerror="this.onerror=null; this.src='https://placehold.co/600x400?text=Recruiter'"
+                                class="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                                id="el-gr776y52">
+                              <div class="absolute bottom-0 left-0 p-6 z-20" id="el-7dey64a3">
+                                <div
+                                  class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-purple-600/60 backdrop-blur-sm mb-4"
+                                  id="el-miksme29">
+                                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor" id="el-ztn7ldjx">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                                      id="el-3cde0avm"></path>
+                                  </svg>
+                                </div>
+                                <h2 class="text-2xl font-bold text-white" id="el-z4fwvtjl">For Recruiters</h2>
+                              </div>
+                            </div>
+                            <!-- Card Content -->
+                            <div class="p-6 space-y-6" id="el-947ui2rq">
+                              <p class="text-slate-300" id="el-gmnf85of">Simplify your recruitment process with smart
+                                resume evaluation, auto-generated assessments, and unbiased scoring.</p>
+
+                              <div class="space-y-3" id="el-8r2wrp43">
+                                <div class="flex items-start" id="el-0htfaxc2">
+                                  <div class="flex-shrink-0 h-5 w-5 text-purple-400 mt-1" id="el-rwc1v0e3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                                      id="el-jfo6lbsk">
+                                      <path fill-rule="evenodd"
+                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                        clip-rule="evenodd" id="el-g9aosm97"></path>
+                                    </svg>
+                                  </div>
+                                  <span class="ml-2 text-slate-300" id="el-8dnk36r2">AI-powered candidate
+                                    filtering</span>
+                                </div>
+                                <div class="flex items-start" id="el-i6we1jhx">
+                                  <div class="flex-shrink-0 h-5 w-5 text-purple-400 mt-1" id="el-ylfqjtw2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                                      id="el-k0pfgz3h">
+                                      <path fill-rule="evenodd"
+                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                        clip-rule="evenodd" id="el-v01q34z6"></path>
+                                    </svg>
+                                  </div>
+                                  <span class="ml-2 text-slate-300" id="el-5vn82bjs">Auto-generated skill
+                                    assessments</span>
+                                </div>
+                                <div class="flex items-start" id="el-tblqmvag">
+                                  <div class="flex-shrink-0 h-5 w-5 text-purple-400 mt-1" id="el-wa0kz2zl">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                                      id="el-nq417b5r">
+                                      <path fill-rule="evenodd"
+                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                        clip-rule="evenodd" id="el-x7wflw5k"></path>
+                                    </svg>
+                                  </div>
+                                  <span class="ml-2 text-slate-300" id="el-gow3dnpv">Unbiased matching algorithms</span>
+                                </div>
+                              </div>
+
+                              <button type="button" id="recruiterSignupBtn" onclick="showRecruiterSignup()"
+                                class="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-600 text-white font-medium rounded-lg shadow-lg hover:shadow-purple-500/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 focus:ring-offset-slate-800 transform transition duration-300 hover:scale-[1.02] active:scale-[0.98] group">
+                                <span class="flex items-center justify-center" id="el-14tusnhx">
+                                  <span id="el-w7ip0uzq">Sign Up as Recruiter</span>
+                                  <svg xmlns="http://www.w3.org/2000/svg"
+                                    class="h-5 w-5 ml-2 transition-transform duration-300 group-hover:translate-x-1"
+                                    fill="none" viewBox="0 0 24 24" stroke="currentColor" id="el-40biy1kb">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M14 5l7 7m0 0l-7 7m7-7H3" id="el-f6d1y4rr"></path>
+                                  </svg>
+                                </span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Back to Login Link -->
+                      <div class="mt-8 text-center" id="el-ciqyrp2q">
+                        <a href="#" onclick="backToLogin()"
+                          class="text-indigo-300 hover:text-indigo-200 transition duration-200 flex items-center justify-center space-x-1"
+                          id="el-bg01hagq">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor" id="el-nqmu62xa">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M10 19l-7-7m0 0l7-7m-7 7h18" id="el-ze18w6y9"></path>
+                          </svg>
+                          <span id="el-y4270ng6">Back to login</span>
+                        </a>
+                      </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="mt-12 text-center text-sm text-slate-500" id="el-38v01jhi">
+                      <p id="el-liov1ns9">© 2023 RecruitAI. All rights reserved.</p>
+                    </div>
+                  </div>
+
+                  <!-- Candidate Signup Modal (Initially Hidden) -->
+                  <div id="candidateSignupModal" class="fixed inset-0 z-50 flex items-center justify-center hidden"
+                    aria-modal="true" aria-hidden="true">
+                    <!-- Backdrop with blur -->
+                    <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm" onclick="closeSignupForms()"
+                      id="el-tb56e99j"></div>
+
+                    <!-- Modal Content -->
+                    <div
+                      class="relative bg-slate-800 border border-slate-700/50 rounded-xl shadow-2xl shadow-indigo-500/10 max-w-lg w-full mx-4 overflow-hidden transform transition-all duration-300 opacity-0 translate-y-4"
+                      id="candidateModalContent">
+                      <!-- Close Button -->
+                      <button type="button" class="absolute top-4 right-4 text-slate-400 hover:text-white z-10"
+                        onclick="closeSignupForms()" aria-label="Close modal" id="el-o7z86aq0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                          stroke="currentColor" id="el-2qsn3l7c">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"
+                            id="el-gthc7f2a"></path>
+                        </svg>
+                      </button>
+
+                      <!-- Header -->
+                      <div class="px-6 py-5 border-b border-slate-700/30" id="el-qbp795pj">
+                        <div class="flex items-center" id="el-pb8o33ic">
+                          <div
+                            class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-indigo-600/20 mr-3"
+                            id="el-f7w95jif">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-400" fill="none"
+                              viewBox="0 0 24 24" stroke="currentColor" id="el-a5rhrkn7">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                id="el-v9qxqeyo"></path>
+                            </svg>
+                          </div>
+                          <div id="el-4564jz7s">
+                            <h2 class="text-xl font-semibold text-white" id="el-nnhz5771">Candidate Signup</h2>
+                            <p class="text-slate-400 text-sm" id="el-7ogv0w03">Create your candidate account</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Form -->
+                      <div class="p-6 max-h-[70vh] overflow-y-auto" id="el-khnegeql">
+                        <form id="el-38tvb71l">
+                          <!-- Basic Information -->
+                          <div class="space-y-4 mb-6" id="el-gky8dbqa">
+                            <div id="el-nqurbmh7">
+                              <label for="candidateName" class="block text-sm font-medium text-slate-300 mb-1"
+                                id="el-1i8zv7lt">Full Name</label>
+                              <input type="text" id="candidateName" name="candidateName"
+                                class="block w-full bg-slate-700/40 border border-slate-600/50 rounded-lg py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition duration-200"
+                                placeholder="John Doe" required="">
+                            </div>
+
+                            <div id="el-zv4vd1a1">
+                              <label for="candidateEmail" class="block text-sm font-medium text-slate-300 mb-1"
+                                id="el-z6wxhx25">Email Address</label>
+                              <input type="email" id="candidateEmail" name="candidateEmail"
+                                class="block w-full bg-slate-700/40 border border-slate-600/50 rounded-lg py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition duration-200"
+                                placeholder="your@email.com" required="">
+                            </div>
+
+                            <div id="el-g9gvw0zl">
+                              <label for="candidatePassword" class="block text-sm font-medium text-slate-300 mb-1"
+                                id="el-im9xddns">Password</label>
+                              <input type="password" id="candidatePassword" name="candidatePassword"
+                                class="block w-full bg-slate-700/40 border border-slate-600/50 rounded-lg py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition duration-200"
+                                placeholder="••••••••" required="">
+                            </div>
+
+                            <div id="el-r45jije8">
+                              <label for="candidateConfirmPassword"
+                                class="block text-sm font-medium text-slate-300 mb-1" id="el-wa8b6wi9">Confirm
+                                Password</label>
+                              <input type="password" id="candidateConfirmPassword" name="candidateConfirmPassword"
+                                class="block w-full bg-slate-700/40 border border-slate-600/50 rounded-lg py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition duration-200"
+                                placeholder="••••••••" required="">
+                            </div>
+                          </div>
+
+                          <!-- Additional Information -->
+                          <div class="space-y-4 mb-6" id="el-fvdzhc8f">
+                            <div id="el-zggl4d6b">
+                              <label for="candidateResume" class="block text-sm font-medium text-slate-300 mb-1"
+                                id="el-x0dyzaqz">Resume Summary</label>
+                              <textarea id="candidateResume" name="candidateResume" rows="3"
+                                class="block w-full bg-slate-700/40 border border-slate-600/50 rounded-lg py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition duration-200"
+                                placeholder="Briefly describe your professional background"></textarea>
+                            </div>
+
+                            <div id="el-xrze7tpq">
+                              <label for="candidateJobRole" class="block text-sm font-medium text-slate-300 mb-1"
+                                id="el-7uri5qud">Job Role Interested In</label>
+                              <input type="text" id="candidateJobRole" name="candidateJobRole"
+                                class="block w-full bg-slate-700/40 border border-slate-600/50 rounded-lg py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition duration-200"
+                                placeholder="e.g. Frontend Developer">
+                            </div>
+
+                            <div id="el-s04eegc5">
+                              <label for="candidateSkills" class="block text-sm font-medium text-slate-300 mb-1"
+                                id="el-0jre9wml">Skills</label>
+                              <input type="text" id="candidateSkills" name="candidateSkills"
+                                class="block w-full bg-slate-700/40 border border-slate-600/50 rounded-lg py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition duration-200"
+                                placeholder="e.g. JavaScript, React, Node.js">
+                            </div>
+                          </div>
+
+                          <!-- Submit Button -->
+                          <button type="submit"
+                            class="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-600 text-white font-medium rounded-lg shadow-lg hover:shadow-indigo-500/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:ring-offset-slate-800 transform transition duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                            id="el-5c9vfflp">
+                            Register as Candidate
+                          </button>
+
+                          <!-- Login Link -->
+                          <div class="mt-4 text-center text-sm text-slate-400" id="el-f9ptzuvn">
+                            Already have an account? <a href="#" onclick="backToLogin()"
+                              class="text-indigo-400 hover:text-indigo-300 transition duration-200"
+                              id="el-05mb9rie">Sign in instead</a>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Recruiter Signup Modal (Initially Hidden) -->
+                  <div id="recruiterSignupModal" class="fixed inset-0 z-50 flex items-center justify-center hidden"
+                    aria-modal="true" aria-hidden="true">
+                    <!-- Backdrop with blur -->
+                    <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm" onclick="closeSignupForms()"
+                      id="el-m08smv0g"></div>
+
+                    <!-- Modal Content -->
+                    <div
+                      class="relative bg-slate-800 border border-slate-700/50 rounded-xl shadow-2xl shadow-purple-500/10 max-w-lg w-full mx-4 overflow-hidden transform transition-all duration-300 opacity-0 translate-y-4"
+                      id="recruiterModalContent">
+                      <!-- Close Button -->
+                      <button type="button" class="absolute top-4 right-4 text-slate-400 hover:text-white z-10"
+                        onclick="closeSignupForms()" aria-label="Close modal" id="el-yabnj64k">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                          stroke="currentColor" id="el-8489fdx6">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"
+                            id="el-9gpo4xp2"></path>
+                        </svg>
+                      </button>
+
+                      <!-- Header -->
+                      <div class="px-6 py-5 border-b border-slate-700/30" id="el-r0ks6u3j">
+                        <div class="flex items-center" id="el-doymr48b">
+                          <div
+                            class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-purple-600/20 mr-3"
+                            id="el-baq9psyk">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-purple-400" fill="none"
+                              viewBox="0 0 24 24" stroke="currentColor" id="el-t2ggmw6b">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                                id="el-r6m3jixp"></path>
+                            </svg>
+                          </div>
+                          <div id="el-juu5eez8">
+                            <h2 class="text-xl font-semibold text-white" id="el-2qj9pf1i">Recruiter Signup</h2>
+                            <p class="text-slate-400 text-sm" id="el-nz5r59tk">Create your recruiter account</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Form -->
+                      <div class="p-6 max-h-[70vh] overflow-y-auto" id="el-drn82f9s">
+                        <form id="el-od9v0ksl">
+                          <!-- Basic Information -->
+                          <div class="space-y-4 mb-6" id="el-mtri2yt1">
+                            <div id="el-zxf9mesz">
+                              <label for="recruiterName" class="block text-sm font-medium text-slate-300 mb-1"
+                                id="el-5i0y5mga">Full Name</label>
+                              <input type="text" id="recruiterName" name="recruiterName"
+                                class="block w-full bg-slate-700/40 border border-slate-600/50 rounded-lg py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition duration-200"
+                                placeholder="John Doe" required="">
+                            </div>
+
+                            <div id="el-3bwn176r">
+                              <label for="recruiterEmail" class="block text-sm font-medium text-slate-300 mb-1"
+                                id="el-g24pisq7">Email Address</label>
+                              <input type="email" id="recruiterEmail" name="recruiterEmail"
+                                class="block w-full bg-slate-700/40 border border-slate-600/50 rounded-lg py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition duration-200"
+                                placeholder="your@email.com" required="">
+                            </div>
+
+                            <div id="el-tr37zfh0">
+                              <label for="recruiterPassword" class="block text-sm font-medium text-slate-300 mb-1"
+                                id="el-wfm7zt9z">Password</label>
+                              <input type="password" id="recruiterPassword" name="recruiterPassword"
+                                class="block w-full bg-slate-700/40 border border-slate-600/50 rounded-lg py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition duration-200"
+                                placeholder="••••••••" required="">
+                            </div>
+
+                            <div id="el-6bqewkw0">
+                              <label for="recruiterConfirmPassword"
+                                class="block text-sm font-medium text-slate-300 mb-1" id="el-2gj5kx23">Confirm
+                                Password</label>
+                              <input type="password" id="recruiterConfirmPassword" name="recruiterConfirmPassword"
+                                class="block w-full bg-slate-700/40 border border-slate-600/50 rounded-lg py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition duration-200"
+                                placeholder="••••••••" required="">
+                            </div>
+                          </div>
+
+                          <!-- Additional Information -->
+                          <div class="space-y-4 mb-6" id="el-33t82lz8">
+                            <div id="el-w6153t62">
+                              <label for="recruiterOrganization" class="block text-sm font-medium text-slate-300 mb-1"
+                                id="el-task1qx1">Organization Name</label>
+                              <input type="text" id="recruiterOrganization" name="recruiterOrganization"
+                                class="block w-full bg-slate-700/40 border border-slate-600/50 rounded-lg py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition duration-200"
+                                placeholder="Company Inc.">
+                            </div>
+
+                            <div id="el-7mknjyk3">
+                              <label for="recruiterIndustry" class="block text-sm font-medium text-slate-300 mb-1"
+                                id="el-uro6rgn7">Industry</label>
+                              <select id="recruiterIndustry" name="recruiterIndustry"
+                                class="block w-full bg-slate-700/40 border border-slate-600/50 rounded-lg py-3 px-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition duration-200">
+                                <option value="" disabled="" selected="" id="el-mece5a3w">Select industry</option>
+                                <option value="technology" id="el-8dy3nvvf">Technology</option>
+                                <option value="healthcare" id="el-9tsknmrt">Healthcare</option>
+                                <option value="finance" id="el-3etopiuj">Finance</option>
+                                <option value="education" id="el-3yxns7bq">Education</option>
+                                <option value="retail" id="el-2ppbfm62">Retail</option>
+                                <option value="manufacturing" id="el-a20v8kby">Manufacturing</option>
+                                <option value="other" id="el-iz7mu1sh">Other</option>
+                              </select>
+                            </div>
+
+                            <div id="el-42rvx1ct">
+                              <label for="recruiterOpenings" class="block text-sm font-medium text-slate-300 mb-1"
+                                id="el-by5dbmk9">Number of Openings</label>
+                              <input type="number" id="recruiterOpenings" name="recruiterOpenings" min="1"
+                                class="block w-full bg-slate-700/40 border border-slate-600/50 rounded-lg py-3 px-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition duration-200"
+                                placeholder="e.g. 5">
+                            </div>
+                          </div>
+
+                          <!-- Submit Button -->
+                          <button type="submit"
+                            class="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-600 text-white font-medium rounded-lg shadow-lg hover:shadow-purple-500/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 focus:ring-offset-slate-800 transform transition duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                            id="el-4s73zlju">
+                            Register as Recruiter
+                          </button>
+
+                          <!-- Login Link -->
+                          <div class="mt-4 text-center text-sm text-slate-400" id="el-lhzzyp0k">
+                            Already have an account? <a href="#" onclick="backToLogin()"
+                              class="text-purple-400 hover:text-purple-300 transition duration-200"
+                              id="el-1xuwuvcz">Sign in instead</a>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                  <canvas width="1196" height="666" style="position: absolute; top: 0px; left: 0px; z-index: 1;"
+                    id="el-k14bi3td"></canvas><canvas width="1196" height="666"
+                    style="position: absolute; top: 0px; left: 0px; z-index: 1;" id="el-hw2rswqz"></canvas>
+                </section>
+
+
+            </main>
+          </div>
+
+        </div>
+
+
+  </main>
+
+  <!-- {bodyScripts} -->
+  <script src="scripts.js"></script>
+</body>
+
+</html>

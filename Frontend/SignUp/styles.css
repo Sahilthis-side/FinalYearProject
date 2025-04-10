@@ -1,0 +1,92 @@
+/* Font declarations */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Sora", Inter, system-ui, sans-serif !important;
+}
+
+body,
+div,
+p {
+  font-family: "DM Sans", Inter, system-ui, sans-serif !important;
+}
+
+:root {
+  color-scheme: light;
+}
+
+:root {
+  color-scheme: light;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: Sora, Inter, system-ui, sans-serif;
+}
+body {
+  font-family: DM Sans, Inter, system-ui, sans-serif;
+}
+
+/* Navigation Bar Styles */
+.nav-header {
+  @apply bg-white shadow-md fixed w-full top-0 z-50;
+}
+
+.nav-container {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+.nav-content {
+  @apply flex justify-between items-center h-16;
+}
+
+.nav-title {
+  @apply text-2xl font-bold text-gray-900 hover:text-gray-700 transition-colors;
+}
+
+.desktop-nav {
+  @apply hidden md:flex md:items-center md:space-x-8;
+}
+
+.nav-link {
+  @apply text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors;
+}
+
+.nav-button {
+  @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors;
+}
+
+.mobile-menu-button {
+  @apply md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500;
+}
+
+.mobile-menu {
+  @apply fixed inset-0 bg-gray-800 bg-opacity-75 z-50 md:hidden;
+}
+
+.mobile-menu-content {
+  @apply fixed right-0 top-0 w-64 h-full bg-white shadow-xl flex flex-col;
+}
+
+.mobile-menu-header {
+  @apply flex items-center justify-between p-4 border-b border-gray-200;
+}
+
+.mobile-menu-close {
+  @apply rounded-md p-2 inline-flex items-center justify-center text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500;
+}
+
+.mobile-menu-links {
+  @apply flex-1 py-4 space-y-2 px-4;
+}
+
+.mobile-menu-link {
+  @apply block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors;
+}
