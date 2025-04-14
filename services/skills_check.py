@@ -1104,8 +1104,14 @@ async def get_match_percentage(job_skills: str, candidate_skills: str):
         # Perform matching
         result = matcher.match_skills(job_skills_list, candidate_skills_list)
         
+        # Generate report
+        report = generate_skills_match_report(result)
+        
         # Return only the match percentage
-        return {"match_percentage": round(result["match_percentage"], 2)}
+        return {
+            "match_percentage": round(result["match_percentage"], 2),
+            "report": report
+        }
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -1193,10 +1199,214 @@ async def get_skill_similarity(skill1: str, skill2: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+def generate_skills_match_report(result: dict) -> str:
+    """
+    Generate a human-readable report from skills matching results
+    
+    Args:
+        result: The result dictionary from the skills matcher
+        
+    Returns:
+        A formatted report string
+    """
+    import random
+    
+    # Extract key metrics
+    match_percentage = round(result["match_percentage"], 1)
+    matches = result["matches"]
+    additional_skills = result["additional_skills"]
+    
+    # Define strength levels
+    if match_percentage >= 90:
+        match_strength = "exceptional"
+    elif match_percentage >= 80:
+        match_strength = "strong"
+    elif match_percentage >= 70:
+        match_strength = "good"
+    elif match_percentage >= 60:
+        match_strength = "moderate"
+    elif match_percentage >= 50:
+        match_strength = "fair"
+    else:
+        match_strength = "limited"
+    
+    # Introduction variations
+    intros = [
+        f"The candidate shows a {match_strength} skills match of {match_percentage}% with the job requirements.",
+        f"Analysis of the candidate's skills reveals a {match_strength} alignment ({match_percentage}%) with the position requirements.",
+        f"The candidate's skillset demonstrates a {match_strength} fit ({match_percentage}%) with the required job skills."
+    ]
+    
+    # Count direct matches, related matches, and missing skills
+    direct_matches = [m for m in matches if m["score"] >= 0.9]
+    related_matches = [m for m in matches if 0.7 <= m["score"] < 0.9]
+    weak_matches = [m for m in matches if 0.4 <= m["score"] < 0.7]
+    missing_skills = [m for m in matches if m["score"] < 0.4 or m["candidate_skill"] is None]
+    
+    # Generate report sections with variations for non-static responses
+    skill_breakdown = []
+    
+    # Strong matches section
+    if direct_matches:
+        strong_match_intros = [
+            f"The candidate directly matches {len(direct_matches)} of the required skills:",
+            f"There are {len(direct_matches)} skills where the candidate shows strong proficiency:",
+            f"The following {len(direct_matches)} skills are well-aligned with the job requirements:"
+        ]
+        skill_breakdown.append(f"{random.choice(strong_match_intros)} {', '.join([m['job_skill'] for m in direct_matches])}.")
+    
+    # Related matches section
+    if related_matches:
+        related_match_intros = [
+            f"The candidate has {len(related_matches)} related or transferable skills:",
+            f"For {len(related_matches)} job requirements, the candidate offers related expertise:",
+            f"The candidate demonstrates related competencies for {len(related_matches)} skills:"
+        ]
+        related_details = []
+        for match in related_matches:
+            related_details.append(f"{match['job_skill']} (matched with {match['candidate_skill']})")
+        skill_breakdown.append(f"{random.choice(related_match_intros)} {', '.join(related_details)}.")
+    
+    # Weak matches section
+    if weak_matches:
+        weak_match_intros = [
+            f"The candidate shows partial alignment in {len(weak_matches)} areas:",
+            f"There are {len(weak_matches)} skills where the match is present but weaker:",
+            f"The following skill areas show minimal overlap:"
+        ]
+        weak_details = []
+        for match in weak_matches:
+            if match["candidate_skill"]:
+                weak_details.append(f"{match['job_skill']} (partially matched with {match['candidate_skill']})")
+        if weak_details:
+            skill_breakdown.append(f"{random.choice(weak_match_intros)} {', '.join(weak_details)}.")
+    
+    # Missing skills section
+    if missing_skills:
+        missing_intros = [
+            f"The candidate is missing {len(missing_skills)} required skills:",
+            f"There are {len(missing_skills)} skill gaps in the candidate's profile:",
+            f"The following required skills were not found in the candidate's profile:"
+        ]
+        skill_breakdown.append(f"{random.choice(missing_intros)} {', '.join([m['job_skill'] for m in missing_skills])}.")
+    
+    # Additional skills section
+    if additional_skills:
+        relevant_additional = [s for s in additional_skills if s["relevant_job_categories"]]
+        other_additional = [s for s in additional_skills if not s["relevant_job_categories"]]
+        
+        if relevant_additional:
+            relevant_intros = [
+                f"The candidate brings {len(relevant_additional)} additional relevant skills:",
+                f"Beyond the job requirements, the candidate offers {len(relevant_additional)} relevant skills:",
+                f"The candidate possesses {len(relevant_additional)} supplementary skills relevant to the role:"
+            ]
+            skill_breakdown.append(f"{random.choice(relevant_intros)} {', '.join([s['skill'] for s in relevant_additional])}.")
+        
+        if other_additional:
+            other_intros = [
+                f"The candidate also has {len(other_additional)} other skills that may provide broader perspective:",
+                f"Additionally, the candidate brings {len(other_additional)} skills from other domains:",
+                f"The candidate's {len(other_additional)} extra skills outside the core requirements include:"
+            ]
+            skill_breakdown.append(f"{random.choice(other_intros)} {', '.join([s['skill'] for s in other_additional])}.")
+    
+    # Analysis and recommendations based on match percentage
+    if match_percentage >= 85:
+        analysis_options = [
+            f"The candidate demonstrates an excellent skill match for this position. Their profile shows strong alignment with the core requirements, making them a highly suitable candidate from a technical standpoint.",
+            f"With a match score of {match_percentage}%, the candidate's technical expertise strongly aligns with the position requirements. They appear well-equipped to handle the technical demands of this role.",
+            f"The candidate's skill profile indicates they would likely excel in this position. Their technical capabilities closely align with the job requirements, suggesting minimal onboarding and training would be needed."
+        ]
+    elif match_percentage >= 70:
+        analysis_options = [
+            f"The candidate shows a good overall match with the position requirements. While some skill gaps exist, their strong areas align well with the core needs of the role.",
+            f"With a {match_percentage}% match, the candidate demonstrates solid alignment with most job requirements. Some targeted training may be beneficial to address specific skill gaps.",
+            f"The candidate's profile indicates they would be suitable for the position with some onboarding. Their technical foundation aligns with most key requirements, though some additional development in specific areas would be beneficial."
+        ]
+    elif match_percentage >= 50:
+        analysis_options = [
+            f"The candidate shows moderate alignment with the position requirements. There are significant skill matches but also notable gaps that would require substantial training or development.",
+            f"With a {match_percentage}% match, the candidate has some relevant skills but lacks proficiency in several key areas. Consider whether training resources are available to bridge these gaps.",
+            f"The candidate's profile suggests they may be able to perform in this role with proper support and development. Their technical foundation has relevant elements, but significant skill building would be needed."
+        ]
+    else:
+        analysis_options = [
+            f"The candidate's skills show limited alignment with the position requirements. There are substantial gaps in critical areas that would require extensive training or development.",
+            f"With only a {match_percentage}% match, the candidate's current skill profile is not well-aligned with the job requirements. Consider whether alternative candidates might be more suitable.",
+            f"The candidate's technical profile indicates a significant mismatch with the position needs. Their expertise appears to be in different domains than what the role requires."
+        ]
+    
+    # Combine report sections
+    report = f"{random.choice(intros)}\n\n"
+    report += "\n".join(skill_breakdown)
+    report += f"\n\nAnalysis: {random.choice(analysis_options)}"
+    
+    return report
+
+@app.post("/match-skills-report")
+async def match_skills_with_report(request: SkillsMatchRequest):
+    """
+    Match job requirements with candidate skills and return detailed analysis with human-readable report
+    """
+    try:
+        # Clean input skills
+        job_skills = [skill.strip() for skill in request.job_skills if skill.strip()]
+        candidate_skills = [skill.strip() for skill in request.candidate_skills if skill.strip()]
+        
+        if not job_skills or not candidate_skills:
+            raise HTTPException(status_code=400, detail="Both job skills and candidate skills must be provided")
+            
+        # Perform matching
+        result = matcher.match_skills(job_skills, candidate_skills)
+        
+        # Generate human-readable report
+        report = generate_skills_match_report(result)
+        
+        # Return both the detailed result and the human-readable report
+        return {
+            "match_details": result,
+            "report": report
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/match-report")
+async def get_match_report(job_skills: str, candidate_skills: str):
+    """
+    Get a comprehensive match report between job skills and candidate skills
+    Skills should be comma-separated in the URL
+    Example: /match-report?job_skills=python,javascript,react&candidate_skills=python,nodejs,react
+    """
+    try:
+        # Split and clean the input skills
+        job_skills_list = [skill.strip() for skill in job_skills.split(",") if skill.strip()]
+        candidate_skills_list = [skill.strip() for skill in candidate_skills.split(",") if skill.strip()]
+        
+        if not job_skills_list or not candidate_skills_list:
+            raise HTTPException(status_code=400, detail="Both job skills and candidate skills must be provided")
+            
+        # Perform matching
+        result = matcher.match_skills(job_skills_list, candidate_skills_list)
+        
+        # Generate report
+        report = generate_skills_match_report(result)
+        
+        return {
+            "match_percentage": round(result["match_percentage"], 2),
+            "job_skills": job_skills_list,
+            "candidate_skills": candidate_skills_list,
+            "report": report
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
 
-# uvicorn skills_check:app --reload
+# uvicorn esco-skills-matching:app --reload
 # http://localhost:8000/match-percentage?job_skills=python,javascript,react,restful%20apis&candidate_skills=nodejs,react
