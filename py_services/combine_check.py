@@ -6,8 +6,8 @@ import random
 import requests
 
 # Import components from each API
-from dc1 import compare_majors, generate_major_report
-from degree_check import degree_similarity, generate_report as generate_degree_report
+from dc1 import compare_majors_list, generate_major_list_report
+from degree_check import compare_degrees_list, generate_degrees_list_report
 from proj_check import calculate_job_match, generate_project_match_report
 
 # We'll use the project_check spaCy model for our combined API
@@ -28,8 +28,8 @@ class CombinedRequest(BaseModel):
     job_major: str  
     job_degree: str
     job_skills: List[str]
-    candidate_major: str
-    candidate_degree: str
+    candidate_majors: List[str]
+    candidate_degrees: List[str]  # Changed from singular to plural
     candidate_skills: List[str]
     candidate_projects: List[ProjectInfo]
 
@@ -213,14 +213,15 @@ async def evaluate_candidate(request: CombinedRequest):
     Comprehensively evaluate a candidate against job requirements
     """
     try:
-        # 1. Calculate Major Similarity
-        major_similarity = compare_majors(request.job_major, request.candidate_major)
-        major_score = round(float(major_similarity) * 100, 2)
-        major_report = generate_major_report(request.job_major, request.candidate_major, major_similarity)
+        # 1. Calculate Major Similarity (using the list version)
+        majors_result = compare_majors_list(request.job_major, request.candidate_majors)
+        major_score = round(float(majors_result["similarity"]) * 100, 2)
+        major_report = generate_major_list_report(request.job_major, majors_result)
         
-        # 2. Calculate Degree Similarity
-        degree_score = degree_similarity(request.candidate_degree, request.job_degree)
-        degree_report = generate_degree_report(request.candidate_degree, request.job_degree, degree_score)
+        # 2. Calculate Degree Similarity (now using the list version)
+        degrees_result = compare_degrees_list(request.job_degree, request.candidate_degrees)
+        degree_score = degrees_result["similarity"]
+        degree_report = generate_degrees_list_report(request.job_degree, degrees_result)
         
         # 3. Calculate Skills Match
         # For simplicity, we'll use a basic skills matching that checks direct matches and partial matches
@@ -331,8 +332,8 @@ async def simple_evaluation(
     job_major: str = Query(..., description="Required major for the job"),
     job_degree: str = Query(..., description="Required degree for the job (e.g., BSc, MSc, PhD)"),
     job_skills: str = Query(..., description="Comma-separated list of required skills"),
-    candidate_major: str = Query(..., description="Candidate's major"),
-    candidate_degree: str = Query(..., description="Candidate's degree (e.g., BSc, MSc, PhD)"),
+    candidate_majors: str = Query(..., description="Comma-separated list of candidate's majors"),
+    candidate_degrees: str = Query(..., description="Comma-separated list of candidate's degrees"),  # Changed from singular to plural
     candidate_skills: str = Query(..., description="Comma-separated list of candidate's skills"),
     projects_json: str = Query(..., description="JSON string of candidate's projects")
 ):
@@ -340,9 +341,11 @@ async def simple_evaluation(
     Simplified version of candidate evaluation using GET parameters
     """
     try:
-        # Parse skills
+        # Parse skills, majors, and degrees
         job_skills_list = [skill.strip() for skill in job_skills.split(",") if skill.strip()]
         candidate_skills_list = [skill.strip() for skill in candidate_skills.split(",") if skill.strip()]
+        candidate_majors_list = [major.strip() for major in candidate_majors.split(",") if major.strip()]
+        candidate_degrees_list = [degree.strip() for degree in candidate_degrees.split(",") if degree.strip()]  # Parse degrees list
         
         # Parse projects
         try:
@@ -357,8 +360,8 @@ async def simple_evaluation(
             job_major=job_major,
             job_degree=job_degree,
             job_skills=job_skills_list,
-            candidate_major=candidate_major,
-            candidate_degree=candidate_degree,
+            candidate_majors=candidate_majors_list,
+            candidate_degrees=candidate_degrees_list,  # Use the list of degrees
             candidate_skills=candidate_skills_list,
             candidate_projects=[
                 ProjectInfo(
@@ -383,4 +386,4 @@ if __name__ == "__main__":
 # Sample usage:
 # uvicorn combine_check:app --reload
 # POST to /evaluate-candidate with a JSON body
-# GET /simple-evaluation?job_major=Computer%20Science&job_degree=BSc&job_skills=python,machine%20learning,sql&candidate_major=IT&candidate_degree=MSc&candidate_skills=python,data%20analysis&projects_json={"projects":[{"name":"ML%20Project","description":"Built%20ML%20model%20using%20Python","skills":["python","tensorflow"]}]} 
+# GET /simple-evaluation?job_major=Computer%20Science&job_degree=BSc&job_skills=python,machine%20learning,sql&candidate_majors=Software%20Engineering,IT,Data%20Science&candidate_degrees=MSc,BSc&candidate_skills=python,data%20analysis&projects_json={"projects":[{"name":"ML%20Project","description":"Built%20ML%20model%20using%20Python","skills":["python","tensorflow"]}]} 
