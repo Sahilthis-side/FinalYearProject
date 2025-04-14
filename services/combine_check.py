@@ -1,582 +1,324 @@
-import spacy
-import re
-import os
-import json
-import requests
-import numpy as np
-from collections import Counter
-from typing import List, Dict, Set
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
-from sentence_transformers import SentenceTransformer, util
-from sklearn.metrics.pairwise import cosine_similarity
-from fuzzywuzzy import fuzz
+from typing import List, Dict, Optional, Union
+import json
+import random
+import requests
 
-# Load spaCy model
-try:
-    nlp = spacy.load("en_core_web_md")  # Medium-sized model with word vectors
-except:
-    print("Installing spaCy model...")
-    import os
-    os.system("python -m spacy download en_core_web_md")
-    nlp = spacy.load("en_core_web_md")
+# Import components from each API
+from dc1 import compare_majors, generate_major_report
+from degree_check import degree_similarity, generate_report as generate_degree_report
+from proj_check import calculate_job_match, generate_project_match_report
 
-# Create FastAPI app
+# We'll use the project_check spaCy model for our combined API
+from proj_check import nlp
+
 app = FastAPI(
-    title="Resume Matching API",
-    description="API for matching job requirements with candidate qualifications"
+    title="Combined Job Applicant Evaluation API",
+    description="API for comprehensive evaluation of job applicants based on degree, major, skills, and projects"
 )
 
-# Load models
-major_model = SentenceTransformer('allenai-specter')  # For major comparison
-degree_model = SentenceTransformer("all-mpnet-base-v2")  # For degree comparison
-skills_model = SentenceTransformer('paraphrase-MiniLM-L6-v2')  # For skills comparison
-
-# Predefined degree rankings (local hierarchy)
-degree_rank = {
-    "PhD": 6,
-    "MTech": 5, "MS": 5, "MSc": 5, "MCA": 3.5,
-    "BTech": 3, "BE": 3, "BSc": 2, "BCA": 1, "Diploma": 0.5
-}
-
-# Synonyms for normalization
-degree_synonyms = {
-    "B.E.": "BE",
-    "B.Sc.": "BSc",
-    "M.Sc.": "MSc",
-    "Master of Science": "MSc",
-    "Bachelor of Technology": "BTech",
-}
-
-# Knowledge base of broader skill categories and their related skills
-skill_categories = {
-    "web development": [
-        "html", "css", "javascript", "js", "typescript", "react", "angular", 
-        "vue", "jquery", "bootstrap", "sass", "less", "webpack", "frontend", 
-        "backend", "fullstack", "responsive design", "spa", "pwa", "web design",
-        "dom", "ajax", "restful api", "node.js", "express.js", "nextjs"
-    ],
-    "ai": [
-        "artificial intelligence", "machine learning", "deep learning", "neural networks",
-        "nlp", "natural language processing", "computer vision", "reinforcement learning",
-        "tensorflow", "pytorch", "keras", "scikit-learn", "transformers", "llm"
-    ],
-    "data science": [
-        "data analysis", "big data", "data mining", "data visualization", "statistics",
-        "python", "r", "pandas", "numpy", "scipy", "matplotlib", "tableau", "power bi",
-        "sql", "database", "etl", "data warehouse", "predictive modeling", "regression",
-        "classification", "clustering", "time series", "hypothesis testing"
-    ],
-    # ... (other skill categories from esco-skills-matching.py)
-}
-
-# Common skill synonyms and related terms
-skill_relationships = {
-    "python": ["python programming", "py", "python3", "coding", "programming"],
-    "machine learning": ["ml", "deep learning", "neural networks", "ai", "artificial intelligence", 
-                       "predictive modeling", "predictive analytics", "neural network", "clustering",
-                       "classification", "regression", "computer vision", "nlp", "natural language processing"],
-    "data analysis": ["data analytics", "data mining", "statistical analysis", "data science", 
-                    "data visualization", "data processing", "analytics", "statistics", "forecasting"],
-    "sql": ["database", "mysql", "postgresql", "postgres", "sqlite", "nosql", "relational database"],
-    "tensorflow": ["tf", "keras", "deep learning framework"],
-    "javascript": ["js", "ecmascript", "node.js", "nodejs"],
-    "react": ["reactjs", "react.js"],
-    "java": ["j2ee", "spring", "hibernate"],
-    "c#": ["csharp", ".net", "dotnet"],
-    "docker": ["containerization", "kubernetes", "k8s"],
-}
-
-# Define request models
-class Project(BaseModel):
+class ProjectInfo(BaseModel):
     name: str
     description: str
     skills: List[str]
 
-class CandidateProfile(BaseModel):
-    degree: str
-    major: str
-    skills: List[str]
-    projects: List[Project]
+class CombinedRequest(BaseModel):
+    job_title: str
+    job_major: str  
+    job_degree: str
+    job_skills: List[str]
+    candidate_major: str
+    candidate_degree: str
+    candidate_skills: List[str]
+    candidate_projects: List[ProjectInfo]
 
-class JobRequirements(BaseModel):
-    degree: str
-    major: str
-    skills: List[str]
+class ComponentScore(BaseModel):
+    score: float
+    component: str
+    report: str
 
-class MatchRequest(BaseModel):
-    job: JobRequirements
-    candidate: CandidateProfile
+class CombinedResponse(BaseModel):
+    overall_score: float
+    major_score: float
+    degree_score: float
+    skills_score: float
+    project_score: float
+    component_reports: Dict[str, str]
+    overall_report: str
 
-# Functions from dc1.py (major comparison)
-def preprocess_major(major):
-    """Standardize majors for consistent embeddings."""
-    major = major.lower().strip()
-    major = major.replace("-", " ").replace("_", " ")  # Handle hyphens/underscores
-    return major
-
-def compare_majors(job_major, candidate_major):
-    # Preprocess majors
-    job_major = preprocess_major(job_major)
-    candidate_major = preprocess_major(candidate_major)
-    
-    # Generate embeddings
-    embeddings = major_model.encode([job_major, candidate_major])
-    
-    # Calculate cosine similarity
-    similarity = cosine_similarity([embeddings[0]], [embeddings[1]])[0][0]
-    return similarity
-
-# Functions from degree_check.py
-def normalize_degree(degree):
-    """Normalize degree by removing dots, spaces, and handling synonyms."""
-    degree = degree.replace(".", "").strip().lower()  # Convert to lowercase for consistency
-    return degree_synonyms.get(degree, degree).lower()
-
-def fetch_global_rank(degree):
-    """Fetch degree hierarchy from Wikidata using SPARQL."""
-    query = f"""
-    SELECT ?degreeLabel ?parentLabel WHERE {{
-      ?degree wdt:P31 wd:Q189533;  # Instance of academic degree
-              rdfs:label "{degree}"@en.
-      OPTIONAL {{ ?degree wdt:P279 ?parent. }}
-      SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en". }}
-    }}
+def calculate_weighted_score(scores: Dict[str, float]) -> float:
     """
-    url = "https://query.wikidata.org/sparql"
-    headers = {"Accept": "application/json"}
-    response = requests.get(url, headers=headers, params={"query": query})
-
-    if response.status_code == 200:
-        data = response.json()
-        results = data.get("results", {}).get("bindings", [])
-        
-        parent_degrees = [entry["parentLabel"]["value"] for entry in results if "parentLabel" in entry]
-        
-        if parent_degrees:
-            for parent in parent_degrees:
-                if parent in degree_rank:
-                    return degree_rank[parent]  # Assign parent's rank
+    Calculate weighted score based on component scores.
     
-    return None  # No known hierarchy
-
-def get_degree_score(degree):
-    """Returns predefined weight if known, else finds closest match."""
-    degree = normalize_degree(degree)
-    
-    if degree in degree_rank:
-        return degree_rank[degree]
-    
-    # Try fetching global equivalence
-    global_rank = fetch_global_rank(degree)
-    if global_rank is not None:
-        return global_rank
-
-    # Compute similarity with known degrees
-    known_degrees = list(degree_rank.keys())
-    emb_degree = degree_model.encode(degree, convert_to_tensor=True)
-    similarities = {d: util.pytorch_cos_sim(emb_degree, degree_model.encode(d, convert_to_tensor=True)).item() for d in known_degrees}
-    
-    # Find best matching known degree
-    best_match = max(similarities, key=similarities.get)
-    
-    # Adjust score based on similarity percentage
-    return degree_rank[best_match] * similarities[best_match]
-
-def degree_similarity(candidate_degree, job_requirement):
-    """Computes similarity score between candidate and job degree."""
-    candidate_score = get_degree_score(candidate_degree)
-    job_score = get_degree_score(job_requirement)
-
-    if job_score == 0:  # Avoid division by zero
-        return 0
-
-    degree_gap = abs(candidate_score - job_score)
-
-    # Candidate has a lower degree → Apply a penalty
-    if candidate_score < job_score:
-        penalty = max(40, 100 - (degree_gap * 10))  # Min 40
-        return round(penalty, 2)
-
-    # Candidate has a higher degree → Apply a bonus
-    if candidate_score > job_score:
-        bonus = min(140, 100 + (degree_gap * 10))  # Max 140
-        return round(bonus, 2)
-
-    return 100  # Exact match
-
-# Functions from proj_check.py
-def detect_domain(skills_list):
-    """Detect the domain of skills or project title"""
-    # Convert to lowercase strings
-    skills_text = " ".join(skills_list).lower()
-    
-    # Define domain detection rules
-    domains = {
-        "machine learning": ["machine learning", "ml", "deep learning", "neural network", "ai", "artificial intelligence",
-                           "model", "predictive", "classification", "clustering", "tensorflow", "keras"],
-        "web development": ["web", "javascript", "html", "css", "react", "angular", "vue", "frontend", "backend",
-                          "fullstack", "node", "express"],
-        "data science": ["data science", "data analysis", "analytics", "visualization", "statistics", 
-                        "dashboard", "bi", "business intelligence"],
-        "devops": ["devops", "docker", "kubernetes", "k8s", "ci/cd", "pipeline", "jenkins", "aws", "cloud"],
-        "mobile": ["mobile", "android", "ios", "swift", "flutter", "react native", "app"]
+    Weights:
+    - Degree: 15%
+    - Major: 20%
+    - Skills: 35% 
+    - Projects: 30%
+    """
+    weights = {
+        "degree": 0.15,
+        "major": 0.20,
+        "skills": 0.35,
+        "projects": 0.30
     }
     
-    # Score each domain
-    domain_scores = {}
-    for domain, keywords in domains.items():
-        score = sum(1 for keyword in keywords if keyword in skills_text)
-        domain_scores[domain] = score
+    weighted_score = 0
+    for component, score in scores.items():
+        weighted_score += score * weights[component]
     
-    # Return the domain with the highest score, if any
-    max_domain = max(domain_scores.items(), key=lambda x: x[1])
-    return max_domain[0] if max_domain[1] > 0 else None
+    return round(weighted_score, 2)
 
-def calculate_job_match(job_requirements, projects):
+def generate_combined_report(
+    major_score: float, 
+    degree_score: float,
+    skills_score: float,
+    project_score: float,
+    overall_score: float,
+    component_reports: Dict[str, str]
+) -> str:
     """
-    Calculate how well a candidate's projects match job requirements.
-    
-    Args:
-        job_requirements: list of skills required for the job
-        projects: list of dictionaries containing project information
-            Each project has 'name', 'description', and 'skills' keys
-            
-    Returns:
-        overall_match_percentage: float representing the overall match percentage
-        consolidated_report: dictionary with consolidated match information
+    Generate a comprehensive, dynamic report combining insights from all components.
     """
-    # Normalize all skills (lowercase for case-insensitive comparison)
-    job_requirements = [skill.lower().strip() for skill in job_requirements]
-    
-    # Create spaCy docs for job requirements for semantic matching
-    job_req_docs = [nlp(req) for req in job_requirements]
-    
-    # Check for domain alignment - detect if the projects are in the same domain as the job
-    job_domain = detect_domain(job_requirements)
-    
-    # Track match details for each project
-    project_scores = []
-    project_matches = []
-    
-    # Track skills across all projects
-    all_demonstrated_skills = set()
-    skill_demonstrated_in = {req: [] for req in job_requirements}
-    skill_match_types = {req: set() for req in job_requirements}
-    
-    # Analyze each project
-    for project in projects:
-        project_skills = [skill.lower().strip() for skill in project['skills']]
-        project_domain = detect_domain(project_skills + [project['name'].lower()])
-        
-        # 1. Direct skill matches
-        direct_matches = set()
-        for skill in project_skills:
-            if skill in job_requirements:
-                direct_matches.add(skill)
-                skill_demonstrated_in[skill].append(project['name'])
-                skill_match_types[skill].add("direct")
-        
-        # 2. Synonym matching using the knowledge base
-        synonym_matches = set()
-        for skill in project_skills:
-            for req in job_requirements:
-                # Check if skill is a synonym of a required skill
-                if req in skill_relationships and skill in skill_relationships[req]:
-                    synonym_matches.add(req)
-                    skill_demonstrated_in[req].append(project['name'])
-                    skill_match_types[req].add("synonym")
-                # Check if required skill is a synonym of the candidate's skill
-                elif skill in skill_relationships and req in skill_relationships[skill]:
-                    synonym_matches.add(req)
-                    skill_demonstrated_in[req].append(project['name'])
-                    skill_match_types[req].add("synonym")
-        
-        # 3. Semantic similarity matching using spaCy word vectors
-        semantic_matches = set()
-        for skill_doc in [nlp(skill) for skill in project_skills]:
-            for i, req_doc in enumerate(job_req_docs):
-                # If similarity is above threshold, consider it a match
-                if skill_doc.vector_norm and req_doc.vector_norm:  # Check if vectors exist
-                    similarity = skill_doc.similarity(req_doc)
-                    # Lower the threshold from 0.75 to 0.6 for more matches
-                    if similarity > 0.6 and job_requirements[i] not in direct_matches and job_requirements[i] not in synonym_matches:
-                        semantic_matches.add(job_requirements[i])
-                        skill_demonstrated_in[job_requirements[i]].append(project['name'])
-                        skill_match_types[job_requirements[i]].add("semantic")
-        
-        # Combine all matched skills for this project
-        project_matching_skills = direct_matches.union(synonym_matches).union(semantic_matches)
-        all_demonstrated_skills.update(project_matching_skills)
-        
-        # Calculate raw match percentage
-        raw_match_percentage = (len(project_matching_skills) / len(job_requirements)) * 100 if job_requirements else 0
-        
-        # Apply domain alignment bonus (if project domain matches job domain)
-        domain_bonus = 0
-        domain_match = False
-        if job_domain and project_domain and job_domain == project_domain:
-            domain_match = True
-            domain_bonus = min(20, 100 - raw_match_percentage)  # Up to 20% bonus, not exceeding 100%
-        
-        # Calculate final match percentage
-        match_percentage = min(100, raw_match_percentage + domain_bonus)
-        
-        # Store project match information
-        project_match = {
-            'name': project['name'],
-            'match_percentage': round(match_percentage, 2),
-            'raw_percentage': round(raw_match_percentage, 2),
-            'domain_match': domain_match,
-            'domain_bonus': round(domain_bonus, 2),
-            'matching_skills': list(project_matching_skills),
-            'missing_skills': [skill for skill in job_requirements if skill not in project_matching_skills]
-        }
-        project_matches.append(project_match)
-        project_scores.append(match_percentage)
-    
-    # Calculate overall match percentage using a weighted approach that favors best matches
-    if project_scores:
-        # 60% weight to the best project, 40% to the average of all projects
-        best_match = max(project_scores)
-        avg_match = sum(project_scores) / len(project_scores)
-        overall_match_percentage = (0.6 * best_match) + (0.4 * avg_match)
+    # Determine strength categories for the overall match
+    if overall_score >= 85:
+        match_strength = "exceptional"
+    elif overall_score >= 75:
+        match_strength = "strong"
+    elif overall_score >= 65:
+        match_strength = "good" 
+    elif overall_score >= 55:
+        match_strength = "moderate"
+    elif overall_score >= 45:
+        match_strength = "fair"
     else:
-        overall_match_percentage = 0
+        match_strength = "limited"
     
-    # Create a consolidated skills report
-    skills_report = []
-    for req in job_requirements:
-        if req in all_demonstrated_skills:
-            match_type = ", ".join(skill_match_types[req])
-            projects_with_skill = skill_demonstrated_in[req]
-            skills_report.append({
-                'skill': req,
-                'demonstrated': True,
-                'match_type': match_type,
-                'projects': projects_with_skill
-            })
-        else:
-            skills_report.append({
-                'skill': req,
-                'demonstrated': False,
-                'match_type': "not found",
-                'projects': []
-            })
+    # Dynamic introduction templates
+    intro_templates = [
+        f"The candidate demonstrates an {match_strength} overall match of {overall_score}% based on combined assessment across education and experience.",
+        f"With an overall score of {overall_score}%, the candidate shows {match_strength} alignment with the position requirements across multiple dimensions.",
+        f"Comprehensive evaluation of the candidate yields a {match_strength} overall match ({overall_score}%) with the job requirements."
+    ]
     
-    # Create a consolidated report
-    consolidated_report = {
-        'overall_match': round(overall_match_percentage, 2),
-        'skills_assessment': skills_report,
-        'project_matches': sorted(project_matches, key=lambda x: x['match_percentage'], reverse=True),
-        'missing_skills': [req for req in job_requirements if req not in all_demonstrated_skills],
-        'job_domain': job_domain
+    # Component breakdown
+    component_scores = {
+        "degree": degree_score,
+        "major": major_score,
+        "skills": skills_score,
+        "projects": project_score
     }
     
-    return round(overall_match_percentage, 2), consolidated_report
-
-# Functions from esco-skills-matching.py
-def calculate_skills_similarity(job_skills, candidate_skills):
-    """
-    Calculate similarity between job skills and candidate skills.
+    # Sort components by score for highlighting strengths and weaknesses
+    sorted_components = sorted(component_scores.items(), key=lambda x: x[1], reverse=True)
+    strongest_component = sorted_components[0]
+    weakest_component = sorted_components[-1]
     
-    Args:
-        job_skills: List of skills required for the job
-        candidate_skills: List of skills possessed by the candidate
-        
-    Returns:
-        Dictionary with matching results and scores
-    """
-    # Enrich skills with knowledge base
-    enriched_job_skills = {}
-    enriched_candidate_skills = {}
-    
-    for skill in job_skills:
-        skill_lower = skill.lower()
-        related_skills = []
-        
-        # Check if the skill is in our normalized categories
-        for category, skills in skill_categories.items():
-            if skill_lower in [s.lower() for s in skills]:
-                related_skills = [s for s in skills if s.lower() != skill_lower]
-                break
-        
-        enriched_job_skills[skill] = {
-            "direct_match": False,
-            "category": None,
-            "related_skills": related_skills
-        }
-    
-    for skill in candidate_skills:
-        skill_lower = skill.lower()
-        related_skills = []
-        
-        # Check if the skill is in our normalized categories
-        for category, skills in skill_categories.items():
-            if skill_lower in [s.lower() for s in skills]:
-                related_skills = [s for s in skills if s.lower() != skill_lower]
-                break
-        
-        enriched_candidate_skills[skill] = {
-            "direct_match": False,
-            "category": None,
-            "related_skills": related_skills
-        }
-    
-    # Calculate score matrix
-    matches = []
-    total_score = 0
-    max_possible_score = len(job_skills)  # Maximum score is one per job skill
-    
-    # For each job skill, find best matching candidate skill
-    for job_skill in job_skills:
-        best_match = None
-        best_score = 0
-        
-        # First try direct matches
-        for candidate_skill in candidate_skills:
-            if job_skill.lower() == candidate_skill.lower():
-                best_match = candidate_skill
-                best_score = 1.0
-                break
-        
-        # If no direct match, try category and semantic matching
-        if not best_match:
-            for candidate_skill in candidate_skills:
-                # Check if job skill is a category and candidate skill belongs to it
-                if job_skill in skill_categories and candidate_skill in skill_categories.get(job_skill, []):
-                    score = 0.9
-                # Check if candidate skill is a category and job skill belongs to it
-                elif candidate_skill in skill_categories and job_skill in skill_categories.get(candidate_skill, []):
-                    score = 0.9
-                # Use semantic similarity
-                else:
-                    # Calculate semantic similarity using sentence transformers
-                    embeddings = skills_model.encode([job_skill, candidate_skill])
-                    similarity = cosine_similarity([embeddings[0]], [embeddings[1]])[0][0]
-                    score = float(similarity)
-                
-                if score > best_score:
-                    best_score = score
-                    best_match = candidate_skill
-        
-        # Add match to results
-        if best_match:
-            matches.append({
-                "job_skill": job_skill,
-                "candidate_skill": best_match,
-                "score": best_score,
-                "related": best_score < 1.0 and best_score >= 0.7,
-                "category_match": job_skill in skill_categories and best_match in skill_categories and 
-                                 skill_categories[job_skill] == skill_categories[best_match]
-            })
-            total_score += best_score
-        else:
-            matches.append({
-                "job_skill": job_skill,
-                "candidate_skill": None,
-                "score": 0,
-                "related": False,
-                "category_match": False
-            })
-    
-    # Calculate overall match percentage
-    match_percentage = (total_score / max_possible_score) * 100 if max_possible_score > 0 else 0
-    
-    # Check for additional candidate skills not matched to job skills
-    additional_skills = []
-    matched_candidate_skills = {match["candidate_skill"] for match in matches if match["candidate_skill"]}
-    for skill in candidate_skills:
-        if skill not in matched_candidate_skills:
-            # Find which job category it might belong to
-            relevant_job_categories = set()
-            skill_category = None
-            
-            for category, skills in skill_categories.items():
-                if skill.lower() in [s.lower() for s in skills]:
-                    skill_category = category
-                    break
-            
-            for job_skill in job_skills:
-                job_category = None
-                for category, skills in skill_categories.items():
-                    if job_skill.lower() in [s.lower() for s in skills]:
-                        job_category = category
-                        break
-                
-                if job_category and skill_category and job_category == skill_category:
-                    relevant_job_categories.add(job_category)
-            
-            additional_skills.append({
-                "skill": skill,
-                "relevant_job_categories": list(relevant_job_categories)
-            })
-    
-    return {
-        "matches": matches,
-        "total_score": total_score,
-        "max_possible_score": max_possible_score,
-        "match_percentage": match_percentage,
-        "additional_skills": additional_skills
+    # Create component breakdown section
+    component_breakdown = []
+    score_descriptions = {
+        "degree": "educational qualification level",
+        "major": "field of study alignment",
+        "skills": "required skills match",
+        "projects": "practical experience"
     }
-
-# Main API endpoint
-@app.post("/match")
-async def match_candidate(request: MatchRequest):
-    """
-    Match a candidate's profile with job requirements.
     
-    This endpoint combines degree matching, major matching, skills matching, and project matching
-    to provide a comprehensive assessment of how well a candidate matches a job.
+    component_section_intros = [
+        "The candidate's scores across different evaluation dimensions are as follows:",
+        "Breaking down the evaluation by component reveals:",
+        "The candidate's profile can be analyzed across these dimensions:"
+    ]
+    
+    component_list = [f"{component.capitalize()} Match: {score}% ({score_descriptions[component]})" 
+                     for component, score in sorted_components]
+    
+    component_breakdown.append(f"{random.choice(component_section_intros)}")
+    component_breakdown.append(", ".join(component_list))
+    
+    # Highlight key strengths and areas of concern
+    strength_templates = [
+        f"The candidate's greatest strength is their {score_descriptions[strongest_component[0]]} with a score of {strongest_component[1]}%.",
+        f"Most notable is the candidate's {strongest_component[1]}% score in {score_descriptions[strongest_component[0]]}.",
+        f"The candidate particularly excels in {score_descriptions[strongest_component[0]]} ({strongest_component[1]}%)."
+    ]
+    
+    concern_templates = []
+    if weakest_component[1] < 60:
+        concern_templates = [
+            f"The candidate's {score_descriptions[weakest_component[0]]} is notably weaker at {weakest_component[1]}%, which may require attention.",
+            f"An area of potential concern is the candidate's {score_descriptions[weakest_component[0]]} score of {weakest_component[1]}%.",
+            f"The evaluation indicates that the candidate's {score_descriptions[weakest_component[0]]} ({weakest_component[1]}%) may need supplementary assessment."
+        ]
+    
+    # Generate detailed analysis based on the overall score
+    if overall_score >= 85:
+        detailed_analysis = random.choice([
+            "Overall, the candidate presents an exceptional match for this position across multiple dimensions. Their combination of education, field of study, skills, and practical experience indicates they are likely to excel in this role with minimal onboarding time.",
+            "The comprehensive evaluation shows this candidate is exceptionally well-suited to the position requirements. Their strong performance across all evaluation criteria suggests they would be able to contribute effectively from day one.",
+            "This candidate demonstrates remarkable alignment with the position requirements. Their balanced strengths across education and experience dimensions indicate they would be a valuable addition to the team."
+        ])
+    elif overall_score >= 75:
+        detailed_analysis = random.choice([
+            "Overall, the candidate presents a strong match for this position with notable strengths in multiple areas. While some aspects may benefit from development, their overall profile suggests they would perform well in this role.",
+            "The comprehensive evaluation indicates this candidate is well-suited to the position. Their profile shows strong alignment in key areas, suggesting they would require only minimal additional training or support.",
+            "This candidate demonstrates solid alignment with the position requirements. Their combination of education and experience provides a strong foundation for success in this role."
+        ])
+    elif overall_score >= 65:
+        detailed_analysis = random.choice([
+            "Overall, the candidate presents a good match for this position with particular strengths in some areas. Some aspects of their profile may require development, but their foundation appears suitable for the role.",
+            "The comprehensive evaluation shows this candidate has good potential for the position. While not exceptional in all areas, their balanced profile suggests they could succeed with appropriate onboarding and support.",
+            "This candidate demonstrates good alignment with several key position requirements. With targeted development in specific areas, they could become a strong contributor."
+        ])
+    elif overall_score >= 55:
+        detailed_analysis = random.choice([
+            "Overall, the candidate presents a moderate match for this position with mixed strengths and weaknesses. Significant development would be needed in some areas, but there is potential for growth.",
+            "The comprehensive evaluation indicates this candidate has moderate alignment with the position. Consider whether resources are available for substantial training and development to address gaps.",
+            "This candidate demonstrates reasonable alignment in some areas but notable gaps in others. Success in this role would depend on their ability to quickly develop in weaker areas."
+        ])
+    else:
+        detailed_analysis = random.choice([
+            "Overall, the candidate presents a limited match for this position. Their profile shows significant gaps relative to the requirements that would require extensive development.",
+            "The comprehensive evaluation indicates this candidate may not be well-aligned with the position requirements. Consider whether alternative candidates might be better prepared.",
+            "This candidate demonstrates limited alignment with key position requirements. The substantial gap between their profile and the job requirements suggests they may not be the best fit."
+        ])
+    
+    # Construct the final report
+    sections = [random.choice(intro_templates)]
+    sections.append("\n\n" + "\n".join(component_breakdown))
+    sections.append("\n\n" + random.choice(strength_templates))
+    
+    if concern_templates:
+        sections.append(" " + random.choice(concern_templates))
+    
+    sections.append("\n\n" + detailed_analysis)
+    
+    # Add recommendation based on score
+    if overall_score >= 80:
+        recommendation = "RECOMMENDATION: This candidate is strongly recommended for interview based on their comprehensive evaluation."
+    elif overall_score >= 70:
+        recommendation = "RECOMMENDATION: This candidate is recommended for interview to further assess their fit and capabilities."
+    elif overall_score >= 60:
+        recommendation = "RECOMMENDATION: Consider interviewing this candidate if stronger alternatives are not available, with focus on addressing identified gaps."
+    else:
+        recommendation = "RECOMMENDATION: This candidate may not be the best fit based on their comprehensive evaluation. Consider alternative candidates."
+    
+    sections.append("\n\n" + recommendation)
+    
+    return "".join(sections)
+
+@app.post("/evaluate-candidate")
+async def evaluate_candidate(request: CombinedRequest):
+    """
+    Comprehensively evaluate a candidate against job requirements
     """
     try:
-        # 1. Degree matching
-        degree_score = degree_similarity(request.candidate.degree, request.job.degree)
+        # 1. Calculate Major Similarity
+        major_similarity = compare_majors(request.job_major, request.candidate_major)
+        major_score = round(float(major_similarity) * 100, 2)
+        major_report = generate_major_report(request.job_major, request.candidate_major, major_similarity)
         
-        # 2. Major matching
-        major_score = compare_majors(request.job.major, request.candidate.major)
-        major_score_percentage = round(float(major_score) * 100, 2)
+        # 2. Calculate Degree Similarity
+        degree_score = degree_similarity(request.candidate_degree, request.job_degree)
+        degree_report = generate_degree_report(request.candidate_degree, request.job_degree, degree_score)
         
-        # 3. Skills matching
-        skills_result = calculate_skills_similarity(request.job.skills, request.candidate.skills)
+        # 3. Calculate Skills Match
+        # For simplicity, we'll use a basic skills matching that checks direct matches and partial matches
+        # This is a simplified version since we don't have the full ESCO skills matching system
+        direct_matches = sum(1 for s in request.candidate_skills if s.lower() in [js.lower() for js in request.job_skills])
+        partial_matches = 0
         
-        # 4. Project matching
-        project_match, project_report = calculate_job_match(request.job.skills, request.candidate.projects)
+        for job_skill in request.job_skills:
+            job_skill_doc = nlp(job_skill.lower())
+            if not any(cs.lower() == job_skill.lower() for cs in request.candidate_skills):
+                # Check for partial matches using similarity
+                best_similarity = 0
+                for candidate_skill in request.candidate_skills:
+                    candidate_skill_doc = nlp(candidate_skill.lower())
+                    if job_skill_doc.vector_norm and candidate_skill_doc.vector_norm:
+                        similarity = job_skill_doc.similarity(candidate_skill_doc)
+                        best_similarity = max(best_similarity, similarity)
+                
+                if best_similarity >= 0.7:
+                    partial_matches += best_similarity
         
-        # Calculate overall match score (weighted average)
-        # Weights: degree (30%), major (20%), skills (30%), projects (20%)
-        overall_score = (
-            0.3 * degree_score +
-            0.2 * major_score_percentage +
-            0.3 * skills_result["match_percentage"] +
-            0.2 * project_match
+        skills_score = ((direct_matches + (0.7 * partial_matches)) / len(request.job_skills)) * 100 if request.job_skills else 0
+        skills_score = round(min(100, skills_score), 2)  # Cap at 100%
+        
+        # Generate a simplified skills report
+        matched_skills = [s for s in request.candidate_skills if s.lower() in [js.lower() for js in request.job_skills]]
+        missing_skills = [s for s in request.job_skills if not any(cs.lower() == s.lower() for cs in request.candidate_skills)]
+        
+        skills_match_templates = [
+            f"The candidate demonstrates {direct_matches} of {len(request.job_skills)} required skills directly, with approximately {round(partial_matches, 1)} additional skills showing partial or related matches.",
+            f"Analysis shows the candidate possesses {direct_matches} skills that directly match job requirements, plus {round(partial_matches, 1)} related or similar skills.",
+            f"The candidate's skills profile includes {direct_matches} exact matches to job requirements and {round(partial_matches, 1)} related skills."
+        ]
+        
+        if matched_skills:
+            matched_skills_text = f"Matched skills include: {', '.join(matched_skills[:5])}"
+            if len(matched_skills) > 5:
+                matched_skills_text += f" and {len(matched_skills) - 5} more"
+        else:
+            matched_skills_text = "No direct skill matches were found."
+            
+        if missing_skills:
+            missing_skills_text = f"Skills not found in the candidate's profile: {', '.join(missing_skills[:5])}"
+            if len(missing_skills) > 5:
+                missing_skills_text += f" and {len(missing_skills) - 5} more"
+        else:
+            missing_skills_text = "The candidate's profile covers all required skills."
+        
+        skills_report = f"{random.choice(skills_match_templates)}\n\n{matched_skills_text}\n\n{missing_skills_text}"
+        
+        # 4. Calculate Project Match
+        projects = []
+        for project in request.candidate_projects:
+            projects.append({
+                "name": project.name,
+                "description": project.description,
+                "skills": project.skills
+            })
+        
+        project_score, project_details = calculate_job_match(request.job_skills, projects)
+        project_report = generate_project_match_report(project_score, project_details)
+        
+        # 5. Calculate Combined Score with Weights
+        component_scores = {
+            "degree": degree_score,
+            "major": major_score,
+            "skills": skills_score,
+            "projects": project_score
+        }
+        
+        overall_score = calculate_weighted_score(component_scores)
+        
+        # 6. Generate Combined Report
+        component_reports = {
+            "degree": degree_report,
+            "major": major_report,
+            "skills": skills_report,
+            "projects": project_report
+        }
+        
+        combined_report = generate_combined_report(
+            major_score, 
+            degree_score, 
+            skills_score, 
+            project_score, 
+            overall_score,
+            component_reports
         )
         
-        # Prepare response
+        # 7. Create Response
         response = {
-            "overall_match_percentage": round(overall_score, 2),
-            "degree_match": {
-                "score": degree_score,
-                "candidate_degree": request.candidate.degree,
-                "job_degree": request.job.degree
-            },
-            "major_match": {
-                "score": major_score_percentage,
-                "candidate_major": request.candidate.major,
-                "job_major": request.job.major
-            },
-            "skills_match": {
-                "match_percentage": round(skills_result["match_percentage"], 2),
-                "matches": skills_result["matches"],
-                "additional_skills": skills_result["additional_skills"]
-            },
-            "project_match": {
-                "match_percentage": project_match,
-                "project_matches": project_report["project_matches"],
-                "skills_assessment": project_report["skills_assessment"],
-                "missing_skills": project_report["missing_skills"],
-                "job_domain": project_report["job_domain"]
-            }
+            "overall_score": overall_score,
+            "major_score": major_score,
+            "degree_score": degree_score,
+            "skills_score": skills_score,
+            "project_score": project_score,
+            "component_reports": component_reports,
+            "overall_report": combined_report
         }
         
         return response
@@ -584,181 +326,52 @@ async def match_candidate(request: MatchRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Individual endpoints for backward compatibility
-@app.get("/compare-majors")
-def compare_majors_endpoint(job_major: str, candidate_major: str):
-    """Compare job major with candidate major."""
-    similarity_score = compare_majors(job_major, candidate_major)
-    return {"similarity": round(float(similarity_score), 3)}
-
-@app.get("/compare-degrees")
-def compare_degrees_endpoint(candidate_degree: str, job_requirement: str):
-    """Compare candidate degree with job degree requirement."""
-    similarity_score = degree_similarity(candidate_degree, job_requirement)
-    return {"Degree Similarity Score": similarity_score}
-
-@app.get("/match-skills")
-async def match_skills_endpoint(job_skills: str, candidate_skills: str):
-    """Match job skills with candidate skills."""
-    try:
-        # Split and clean the input skills
-        job_skills_list = [skill.strip().lower() for skill in job_skills.split(",") if skill.strip()]
-        candidate_skills_list = [skill.strip().lower() for skill in candidate_skills.split(",") if skill.strip()]
-        
-        if not job_skills_list or not candidate_skills_list:
-            raise HTTPException(status_code=400, detail="Both job skills and candidate skills must be provided")
-            
-        # Perform matching
-        result = calculate_skills_similarity(job_skills_list, candidate_skills_list)
-        
-        # Return only the match percentage
-        return {"match_percentage": round(result["match_percentage"], 2)}
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/match-projects")
-async def match_projects_endpoint(job_skills: str, projects_json: str):
-    """Match job skills with candidate projects."""
-    try:
-        # Parse job skills
-        job_requirements = [skill.strip() for skill in job_skills.split(",") if skill.strip()]
-        
-        # Parse projects JSON
-        try:
-            projects_data = json.loads(projects_json)
-            projects = projects_data.get("projects", [])
-        except json.JSONDecodeError:
-            raise HTTPException(status_code=400, detail="Invalid projects JSON format")
-        
-        if not job_requirements or not projects:
-            raise HTTPException(status_code=400, detail="Both job skills and projects must be provided")
-        
-        # Calculate match
-        overall_match, report = calculate_job_match(job_requirements, projects)
-        
-        # Create simplified response
-        response = {
-            "match_percentage": overall_match,
-            "job_domain": report["job_domain"],
-            "demonstrated_skills": [
-                {
-                    "skill": skill["skill"],
-                    "match_type": skill["match_type"],
-                    "projects": skill["projects"]
-                }
-                for skill in report["skills_assessment"]
-                if skill["demonstrated"]
-            ],
-            "missing_skills": [
-                skill["skill"]
-                for skill in report["skills_assessment"]
-                if not skill["demonstrated"]
-            ],
-            "project_rankings": [
-                {
-                    "name": proj["name"],
-                    "match_percentage": proj["match_percentage"],
-                    "matching_skills": proj["matching_skills"]
-                }
-                for proj in report["project_matches"]
-            ]
-        }
-        
-        return response
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/combined-match")
-async def combined_match_get(
-    job_degree: str,
-    job_major: str,
-    job_skills: str,
-    candidate_degree: str,
-    candidate_major: str,
-    candidate_skills: str,
-    projects_json: str
+@app.get("/simple-evaluation")
+async def simple_evaluation(
+    job_major: str = Query(..., description="Required major for the job"),
+    job_degree: str = Query(..., description="Required degree for the job (e.g., BSc, MSc, PhD)"),
+    job_skills: str = Query(..., description="Comma-separated list of required skills"),
+    candidate_major: str = Query(..., description="Candidate's major"),
+    candidate_degree: str = Query(..., description="Candidate's degree (e.g., BSc, MSc, PhD)"),
+    candidate_skills: str = Query(..., description="Comma-separated list of candidate's skills"),
+    projects_json: str = Query(..., description="JSON string of candidate's projects")
 ):
     """
-    Combined matching endpoint that accepts all parameters as query parameters.
-    
-    Args:
-        job_degree: Degree required for the job (e.g., "BTech", "MS")
-        job_major: Major required for the job (e.g., "Computer Science")
-        job_skills: Comma-separated list of skills required for the job
-        candidate_degree: Candidate's degree (e.g., "MS", "BTech")
-        candidate_major: Candidate's major (e.g., "Software Engineering")
-        candidate_skills: Comma-separated list of candidate's skills
-        projects_json: URL-encoded JSON string containing projects information
-        
-    Returns:
-        Combined match score and detailed breakdown
+    Simplified version of candidate evaluation using GET parameters
     """
     try:
-        # Parse job skills
-        job_skills_list = [skill.strip().lower() for skill in job_skills.split(",") if skill.strip()]
+        # Parse skills
+        job_skills_list = [skill.strip() for skill in job_skills.split(",") if skill.strip()]
+        candidate_skills_list = [skill.strip() for skill in candidate_skills.split(",") if skill.strip()]
         
-        # Parse candidate skills
-        candidate_skills_list = [skill.strip().lower() for skill in candidate_skills.split(",") if skill.strip()]
-        
-        # Parse projects JSON
+        # Parse projects
         try:
             projects_data = json.loads(projects_json)
             projects = projects_data.get("projects", [])
         except json.JSONDecodeError:
             raise HTTPException(status_code=400, detail="Invalid projects JSON format")
         
-        # 1. Degree matching
-        degree_score = degree_similarity(candidate_degree, job_degree)
-        
-        # 2. Major matching
-        major_score = compare_majors(job_major, candidate_major)
-        major_score_percentage = round(float(major_score) * 100, 2)
-        
-        # 3. Skills matching
-        skills_result = calculate_skills_similarity(job_skills_list, candidate_skills_list)
-        
-        # 4. Project matching
-        project_match, project_report = calculate_job_match(job_skills_list, projects)
-        
-        # Calculate overall match score (weighted average)
-        # Weights: degree (30%), major (20%), skills (30%), projects (20%)
-        overall_score = (
-            0.3 * degree_score +
-            0.2 * major_score_percentage +
-            0.3 * skills_result["match_percentage"] +
-            0.2 * project_match
+        # Create a full request object
+        request = CombinedRequest(
+            job_title="Not Specified",
+            job_major=job_major,
+            job_degree=job_degree,
+            job_skills=job_skills_list,
+            candidate_major=candidate_major,
+            candidate_degree=candidate_degree,
+            candidate_skills=candidate_skills_list,
+            candidate_projects=[
+                ProjectInfo(
+                    name=project.get("name", "Unnamed Project"),
+                    description=project.get("description", ""),
+                    skills=project.get("skills", [])
+                )
+                for project in projects
+            ]
         )
         
-        # Prepare response
-        response = {
-            "overall_match_percentage": round(overall_score, 2),
-            "degree_match": {
-                "score": degree_score,
-                "candidate_degree": candidate_degree,
-                "job_degree": job_degree
-            },
-            "major_match": {
-                "score": major_score_percentage,
-                "candidate_major": candidate_major,
-                "job_major": job_major
-            },
-            "skills_match": {
-                "match_percentage": round(skills_result["match_percentage"], 2),
-                "matches": skills_result["matches"],
-                "additional_skills": skills_result["additional_skills"]
-            },
-            "project_match": {
-                "match_percentage": project_match,
-                "project_matches": project_report["project_matches"],
-                "skills_assessment": project_report["skills_assessment"],
-                "missing_skills": project_report["missing_skills"],
-                "job_domain": project_report["job_domain"]
-            }
-        }
-        
-        return response
+        # Use the full evaluation endpoint
+        return await evaluate_candidate(request)
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -767,6 +380,7 @@ if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
-
+# Sample usage:
 # uvicorn combine_check:app --reload
-# http://localhost:8000/combined-match?job_degree=BTech&job_major=Computer Science&job_skills=python,machine learning,sql&candidate_degree=MS&candidate_major=Software Engineering&candidate_skills=python,data analysis,postgresql&projects_json={"projects":[{"name":"ML Project","description":"Built ML model","skills":["python","tensorflow"]},{"name":"Data Analysis Project","description":"Analyzed customer data using SQL and Python","skills":["python","sql","data analysis"]}]}
+# POST to /evaluate-candidate with a JSON body
+# GET /simple-evaluation?job_major=Computer%20Science&job_degree=BSc&job_skills=python,machine%20learning,sql&candidate_major=IT&candidate_degree=MSc&candidate_skills=python,data%20analysis&projects_json={"projects":[{"name":"ML%20Project","description":"Built%20ML%20model%20using%20Python","skills":["python","tensorflow"]}]} 
