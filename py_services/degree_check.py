@@ -1,8 +1,10 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
+from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer, util
 import requests
 import math
 import random
+from typing import List, Dict
 
 app = FastAPI()
 
@@ -102,6 +104,44 @@ def degree_similarity(candidate_degree, job_requirement):
 
     return 100  # Exact match
 
+def compare_degrees_list(job_requirement, candidate_degrees):
+    """
+    Compare job required degree with multiple candidate degrees and find best match.
+    
+    Args:
+        job_requirement: The job required degree
+        candidate_degrees: List of candidate degrees
+        
+    Returns:
+        Dictionary with best match information
+    """
+    if not candidate_degrees:
+        return {
+            "similarity": 0.0,
+            "best_match": None,
+            "all_matches": []
+        }
+    
+    # Compare each degree
+    matches = []
+    for degree in candidate_degrees:
+        similarity = degree_similarity(degree, job_requirement)
+        matches.append({
+            "degree": degree,
+            "similarity": similarity,
+            "normalized": normalize_degree(degree)
+        })
+    
+    # Sort by similarity (highest first)
+    matches.sort(key=lambda x: x["similarity"], reverse=True)
+    
+    # Return best match info and all matches
+    return {
+        "similarity": matches[0]["similarity"],
+        "best_match": matches[0]["degree"],
+        "all_matches": matches
+    }
+
 def generate_report(candidate_degree, job_requirement, similarity_score):
     """Generates a dynamic report about how well the candidate's degree matches the job requirement."""
     messages = []
@@ -164,6 +204,107 @@ def generate_report(candidate_degree, job_requirement, similarity_score):
     
     return complete_report
 
+def generate_degrees_list_report(job_requirement, degrees_result):
+    """
+    Generate a report for multiple candidate degrees compared to job requirement.
+    
+    Args:
+        job_requirement: The job required degree
+        degrees_result: Result from compare_degrees_list
+        
+    Returns:
+        Detailed report on degree matching
+    """
+    best_match = degrees_result["best_match"]
+    best_score = degrees_result["similarity"]
+    all_matches = degrees_result["all_matches"]
+    
+    # If no degrees provided
+    if not best_match:
+        return "No candidate degrees were provided for comparison."
+    
+    # Generate report for best match
+    best_match_report = generate_report(best_match, job_requirement, best_score)
+    
+    # If only one degree, return that report
+    if len(all_matches) == 1:
+        return best_match_report
+    
+    # Generate additional context for multiple degrees
+    multi_degree_context = []
+    
+    # Intro for multiple degrees
+    multi_degree_intros = [
+        f"The candidate has provided {len(all_matches)} different degrees, with '{best_match}' being the most relevant ({best_score}%) to the job requirements.",
+        f"From the {len(all_matches)} degrees in the candidate's profile, '{best_match}' shows the strongest match ({best_score}%) with the position's requirements.",
+        f"Among multiple educational qualifications, the candidate's '{best_match}' degree provides the best alignment ({best_score}%) with the job requirements."
+    ]
+    
+    multi_degree_context.append(random.choice(multi_degree_intros))
+    
+    # Group degrees by their match level
+    higher_degrees = [m for m in all_matches if m["similarity"] > 100]
+    matching_degrees = [m for m in all_matches if 95 <= m["similarity"] <= 105]
+    lower_degrees = [m for m in all_matches if m["similarity"] < 95]
+    
+    # Add context about the distribution of degrees
+    if higher_degrees and not len(higher_degrees) == len(all_matches):
+        higher_text = [
+            f"The candidate has {len(higher_degrees)} degree(s) that exceed the job requirements, which may indicate advanced qualifications in certain areas.",
+            f"{len(higher_degrees)} of the candidate's degrees are above the required level, suggesting strong academic background.",
+            f"With {len(higher_degrees)} higher-level degree(s), the candidate demonstrates qualifications beyond the minimum requirements."
+        ]
+        multi_degree_context.append(random.choice(higher_text))
+    
+    if matching_degrees and not len(matching_degrees) == len(all_matches):
+        match_text = [
+            f"{len(matching_degrees)} of the candidate's degrees closely match the required level for this position.",
+            f"The candidate has {len(matching_degrees)} degree(s) that align well with the educational requirements.",
+            f"{len(matching_degrees)} degree(s) in the candidate's profile are at an appropriate level for this role."
+        ]
+        multi_degree_context.append(random.choice(match_text))
+    
+    if lower_degrees and not len(lower_degrees) == len(all_matches):
+        lower_text = [
+            f"The candidate has {len(lower_degrees)} degree(s) below the preferred level, which may be supplementary to their primary qualifications.",
+            f"{len(lower_degrees)} of the candidate's educational qualifications are below the ideal level for this position.",
+            f"The candidate's profile includes {len(lower_degrees)} lower-level degree(s) that may represent earlier education or specialized training."
+        ]
+        multi_degree_context.append(random.choice(lower_text))
+    
+    # Add an overall interpretation of multiple degrees
+    if len(higher_degrees) >= 1:
+        interpretation = [
+            "Having multiple degrees, including advanced qualifications, suggests a strong commitment to education and potentially specialized knowledge across several domains.",
+            "The candidate's diverse educational background, particularly with higher-level degrees, indicates depth of knowledge that could be valuable for complex roles.",
+            "Multiple degrees, especially those exceeding requirements, demonstrate academic achievement and potentially transferable analytical skills."
+        ]
+        multi_degree_context.append(random.choice(interpretation))
+    elif len(matching_degrees) >= 2:
+        interpretation = [
+            "The candidate's multiple degrees at the appropriate level indicate breadth of knowledge and potentially complementary skills relevant to the position.",
+            "Having several degrees that match the requirements suggests versatility and well-rounded educational preparation for this role.",
+            "The candidate's educational profile, with multiple relevant degrees, demonstrates focused preparation aligned with this field."
+        ]
+        multi_degree_context.append(random.choice(interpretation))
+    
+    # Combine reports
+    combined_report = best_match_report + "\n\n" + "\n".join(multi_degree_context)
+    return combined_report
+
+# Define request and response models for the list endpoint
+class DegreeComparisonRequest(BaseModel):
+    job_requirement: str
+    candidate_degrees: List[str]
+
+class DegreeComparisonResponse(BaseModel):
+    similarity: float
+    job_requirement: str
+    best_match: str
+    all_matches: List[Dict]
+    report: str
+
+# Original endpoint (for backward compatibility)
 @app.get("/degree_similarity/")
 def degree_similarity_api(candidate_degree: str, job_requirement: str):
     """API endpoint to compare degrees."""
@@ -175,3 +316,44 @@ def degree_similarity_api(candidate_degree: str, job_requirement: str):
         "job_requirement": job_requirement,
         "report": report
     }
+
+# New endpoint for multiple degrees
+@app.post("/compare-degrees")
+def compare_multiple_degrees(request: DegreeComparisonRequest):
+    """
+    Compare job requirement against multiple candidate degrees.
+    
+    Returns the best match with a detailed report.
+    """
+    result = compare_degrees_list(request.job_requirement, request.candidate_degrees)
+    report = generate_degrees_list_report(request.job_requirement, result)
+    
+    return {
+        "similarity": result["similarity"],
+        "job_requirement": request.job_requirement,
+        "best_match": result["best_match"],
+        "all_matches": result["all_matches"],
+        "report": report
+    }
+
+# New GET endpoint for multiple degrees (easier for testing)
+@app.get("/compare-degrees-list")
+def compare_degrees_get(job_requirement: str, candidate_degrees: str):
+    """
+    Compare job requirement against multiple candidate degrees via GET.
+    
+    Args:
+        job_requirement: Required degree for the job (e.g., BSc, MSc)
+        candidate_degrees: Comma-separated list of candidate degrees
+    """
+    # Parse comma-separated degrees
+    degrees_list = [d.strip() for d in candidate_degrees.split(",") if d.strip()]
+    
+    # Create request object
+    request = DegreeComparisonRequest(
+        job_requirement=job_requirement,
+        candidate_degrees=degrees_list
+    )
+    
+    # Use the POST endpoint
+    return compare_multiple_degrees(request)
