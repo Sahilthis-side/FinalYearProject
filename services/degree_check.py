@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from sentence_transformers import SentenceTransformer, util
 import requests
 import math
+import random
 
 app = FastAPI()
 
@@ -11,7 +12,7 @@ model = SentenceTransformer("all-mpnet-base-v2")
 # Predefined degree rankings (local hierarchy)
 degree_rank = {
     "PhD": 6,
-    "MTech": 5, "ME": 5, "MSc": 4, "MCA": 3.2,
+    "MTech": 5, "MS": 5, "MSc": 5, "MCA": 3.5,
     "BTech": 3, "BE": 3, "BSc": 2, "BCA": 1, "Diploma": 0.5
 }
 
@@ -101,11 +102,76 @@ def degree_similarity(candidate_degree, job_requirement):
 
     return 100  # Exact match
 
+def generate_report(candidate_degree, job_requirement, similarity_score):
+    """Generates a dynamic report about how well the candidate's degree matches the job requirement."""
+    messages = []
+    
+    # Add context about the degrees and score
+    degree_difference = ""
+    if similarity_score == 100:
+        degree_difference = "exact match"
+    elif similarity_score > 100:
+        degree_difference = "higher than required"
+    elif similarity_score < 100:
+        degree_difference = "lower than required"
+    
+    # Report variations to avoid static responses
+    report_variations = [
+        f"The candidate with a {candidate_degree} degree applying for a position requiring {job_requirement} shows a match score of {similarity_score}%. This represents a {degree_difference} qualification scenario.",
+        
+        f"With a similarity score of {similarity_score}%, the candidate's {candidate_degree} degree compared to the job's {job_requirement} requirement indicates a {degree_difference} in educational qualifications.",
+        
+        f"Analysis shows a {similarity_score}% match between the candidate's {candidate_degree} degree and the position's {job_requirement} requirement, representing a {degree_difference} qualification level."
+    ]
+    
+    # Select a random base variation
+    base_report = random.choice(report_variations)
+    
+    # Add detailed analysis based on score ranges
+    if similarity_score >= 130:
+        detail = random.choice([
+            f"The candidate is significantly overqualified with their {candidate_degree}, which substantially exceeds the {job_requirement} requirement. This could indicate excellent academic credentials but may raise concerns about retention if the role doesn't offer sufficient challenges.",
+            f"With a {candidate_degree} that far exceeds the required {job_requirement}, the candidate brings exceptional educational qualifications that might benefit complex aspects of the role, though position fit should be carefully evaluated.",
+        ])
+    elif 110 <= similarity_score < 130:
+        detail = random.choice([
+            f"The candidate's {candidate_degree} moderately exceeds the required {job_requirement}, suggesting they bring additional educational background that could be beneficial for the role.",
+            f"With qualifications above the required {job_requirement}, the candidate's {candidate_degree} indicates they may bring additional academic perspective to the position.",
+        ])
+    elif 95 <= similarity_score < 110:
+        detail = random.choice([
+            f"The candidate's {candidate_degree} aligns well with the {job_requirement} requirement, suggesting an appropriate educational background for the position.",
+            f"There is a strong educational match between the candidate's {candidate_degree} and the position's {job_requirement} requirement, indicating suitable academic preparation.",
+        ])
+    elif 80 <= similarity_score < 95:
+        detail = random.choice([
+            f"The candidate's {candidate_degree} is slightly below the ideal {job_requirement} qualification, but may be sufficient depending on other factors such as relevant experience.",
+            f"While the {candidate_degree} is somewhat below the preferred {job_requirement}, the candidate might compensate through practical experience or specific skills relevant to the role.",
+        ])
+    elif 60 <= similarity_score < 80:
+        detail = random.choice([
+            f"The {candidate_degree} falls notably below the {job_requirement} requirement, indicating a potential gap in educational background that would need to be offset by significant relevant experience.",
+            f"There is a considerable difference between the candidate's {candidate_degree} and the required {job_requirement}, which may affect their preparedness for certain aspects of the role.",
+        ])
+    else:
+        detail = random.choice([
+            f"The candidate's {candidate_degree} qualification shows a substantial misalignment with the required {job_requirement}, suggesting this may not be an appropriate match purely from an educational perspective.",
+            f"With a significant gap between the {candidate_degree} and the required {job_requirement}, the candidate would need extraordinary compensating qualifications to be considered suitable.",
+        ])
+    
+    # Combine the base report and detailed analysis
+    complete_report = f"{base_report} {detail}"
+    
+    return complete_report
+
 @app.get("/degree_similarity/")
 def degree_similarity_api(candidate_degree: str, job_requirement: str):
     """API endpoint to compare degrees."""
     similarity_score = degree_similarity(candidate_degree, job_requirement)
-    return {"Degree Similarity Score": similarity_score}
-
-# To run the API, use: uvicorn degree_check:app --reload
-# Call API in browser: http://127.0.0.1:8000/degree_similarity/?candidate_degree=BCA&job_requirement=Btech
+    report = generate_report(candidate_degree, job_requirement, similarity_score)
+    return {
+        "degree_similarity_score": similarity_score,
+        "candidate_degree": candidate_degree,
+        "job_requirement": job_requirement,
+        "report": report
+    }
